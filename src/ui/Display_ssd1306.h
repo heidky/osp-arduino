@@ -14,6 +14,8 @@ protected:
 
     void draw_Main();
     void draw_BtMode_Selection();
+
+    void draw_BtMode_Pulse();
     void draw_BtMode_AM();
     void draw_BtMode_Tens();
 

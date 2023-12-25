@@ -41,6 +41,9 @@ void Display_ssd1306::update(State state) {
     case Page::BtMode_Selection:
         draw_BtMode_Selection();
         break;
+    case Page::BtMode_Pulse:
+        draw_BtMode_Pulse();
+        break;
     case Page::BtMode_AM:
         draw_BtMode_AM();
         break;
@@ -113,6 +116,20 @@ void Display_ssd1306::draw_BtMode_Selection() {
 
     display.drawRect(6 + (10+16) * state.bt_mode_cursor, 32-6, 16, 4, WHITE);
     display.fillRect(6 + (10+16) * state.bt_mode, 32-6, 16, 4, WHITE);
+}
+
+
+void Display_ssd1306::draw_BtMode_Pulse() {
+    display.setFont(&FreeSans9pt7b);
+    
+    String l = String(state.bt_mode_pulse_freq) + "Hz";
+    String r = String(state.bt_mode_pulse_bias) + "%";
+
+    draw_text(3, 30, l.c_str(), false, false);
+    draw_text(127-3, 30, r.c_str(), false, true);
+
+    // display.setFont(&FreeSans12pt7b);
+    // draw_text(127-3, 30, String("Pulse").c_str(), false, true);
 }
 
 

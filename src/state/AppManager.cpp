@@ -9,6 +9,9 @@ void AppManager::action(Action a, void* payload) {
     case Page::BtMode_Selection:
         page_BtMode_Selection(a, payload);
         break;
+    case Page::BtMode_Pulse:
+        page_BtMode_Pulse(a, payload);
+        break;
     case Page::BtMode_AM:
         page_BtMode_AM(a, payload);
         break;
@@ -80,7 +83,10 @@ void AppManager::page_BtMode_Selection(Action a, void* payload) {
     case Action::PressM: {
         state.bt_mode = state.bt_mode_cursor;
 
-        if(state.bt_mode == BTMODE_AM) {
+        if(state.bt_mode == BTMODE_PULSE) {
+            set_page(Page::BtMode_Pulse);
+        }
+        else if(state.bt_mode == BTMODE_AM) {
             set_page(Page::BtMode_AM);
         }
         else if(state.bt_mode == BTMODE_TENS) {
@@ -94,6 +100,36 @@ void AppManager::page_BtMode_Selection(Action a, void* payload) {
     }
     case Action::DoublePressM: {
         set_page(Page::Settings);
+        break;
+    }
+    }
+}
+
+void AppManager::page_BtMode_Pulse(Action a, void* payload) {
+    switch (a) 
+    {
+    case Action::ValueL: {
+        int d = *(int*)payload;
+        int f = state.bt_mode_pulse_freq;
+        set_pulse_freq(f + PULSE_FREQ_STEP * d);
+        break;
+    }
+    case Action::ValueR: {
+        int d = *(int*)payload;
+        int b = state.bt_mode_pulse_bias;
+        set_pulse_bias(b + PULSE_BIAS_STEP * d);
+        break;
+    }
+    case Action::PressL: {
+        set_l_factor(0);
+        break;
+    }
+    case Action::PressR: {
+        set_r_factor(0);
+        break;
+    }
+    case Action::PressM: {
+        set_page(Page::Main);
         break;
     }
     }
@@ -288,6 +324,36 @@ void AppManager::inc_bt_mode(int d) {
 
     state.bt_mode_cursor = (state.bt_mode_cursor + d + NUM_BTMODE) % NUM_BTMODE;
     updated = true;
+}
+
+void AppManager::set_pulse_freq(int freq)
+{
+    if(freq > PULSE_FREQ_MAX) {
+        freq = PULSE_FREQ_MAX;
+    }
+    else if (freq < PULSE_FREQ_MIN) {
+        freq = PULSE_FREQ_MIN;        
+    }
+
+    if(state.bt_mode_pulse_freq != freq) {
+        state.bt_mode_pulse_freq = freq;
+        updated = true;
+    }
+}
+
+void AppManager::set_pulse_bias(int b)
+{
+    if(b > PULSE_BIAS_MAX) {
+        b = PULSE_BIAS_MAX;
+    }
+    else if (b < PULSE_BIAS_MIN) {
+        b = PULSE_BIAS_MIN;        
+    }
+
+    if(state.bt_mode_pulse_bias != b) {
+        state.bt_mode_pulse_bias = b;
+        updated = true;
+    }
 }
 
 void AppManager::set_bt_am_freq(int freq) {

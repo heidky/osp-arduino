@@ -16,6 +16,7 @@ enum class Page {
     Main,
 
     BtMode_Selection,
+    BtMode_Pulse,
     BtMode_AM,
     BtMode_Tens,
 
@@ -24,10 +25,19 @@ enum class Page {
     Settings_Ramp,
 };
 
-#define NUM_BTMODE 3
+#define NUM_BTMODE 4
 #define BTMODE_BYPASS 0
-#define BTMODE_AM 1
-#define BTMODE_TENS 2
+#define BTMODE_PULSE 1
+#define BTMODE_AM 2
+#define BTMODE_TENS 3
+
+#define PULSE_FREQ_MIN 10
+#define PULSE_FREQ_MAX 100
+#define PULSE_FREQ_STEP 5
+
+#define PULSE_BIAS_MIN 5
+#define PULSE_BIAS_MAX 100
+#define PULSE_BIAS_STEP 5
 
 #define NUM_SHAPES 4
 #define SHAPE_SIN 0
@@ -61,6 +71,9 @@ struct State {
     int bt_mode = BTMODE_BYPASS;
     int bt_mode_cursor = BTMODE_BYPASS;
 
+    int bt_mode_pulse_freq = 50;
+    int bt_mode_pulse_bias = 50;
+
     int bt_mode_am_freq = 400;
     int bt_mode_am_shape = SHAPE_SIN;
 
@@ -85,6 +98,9 @@ public:
     void set_bt_connected(bool connected);
     void inc_bt_mode(int d);
 
+    void set_pulse_freq(int f);
+    void set_pulse_bias(int b);
+
     void set_bt_am_freq(int freq);
     void inc_bt_am_shape(int d);
 
@@ -101,6 +117,7 @@ protected:
     void page_Main(Action a, void* payload);
 
     void page_BtMode_Selection(Action a, void* payload);
+    void page_BtMode_Pulse(Action a, void* payload);
     void page_BtMode_AM(Action a, void* payload);
     void page_BtMode_Tens(Action a, void* payload);
 

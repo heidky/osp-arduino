@@ -65,6 +65,9 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
         const int tens_period_samples = roundf(44100.f / manager->state.bt_mode_tens_freq);
         const int tens_pulse_samples = manager->state.bt_mode_tens_width;
 
+        float pulse_freq = manager->state.bt_mode_pulse_freq;
+        float pulse_bias = manager->state.bt_mode_pulse_bias;
+
         const float volume_mult = (float)volumeFactor / volumeFactorMax;
 
         // reset intensity if bypass
@@ -105,6 +108,18 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
                 
                 l_pcm = l * l_intensity * 1.5f;
                 r_pcm = r * r_intensity * 1.5f;
+            }
+
+            if(bt_mode == BTMODE_PULSE) {
+                float t = time / 44100.f * pulse_freq;
+                // convert from 0..100 to -1..1
+                const float b = pulse_bias / 100.f * 2 - 1;
+                // compute biased am modulation
+                float mult = (fsin(t) + b) / (1 + b) * .997;
+                if(mult < 0) mult = 0;
+
+                l_pcm = l_pcm * mult;
+                r_pcm = r_pcm * mult;
             }
 
             // invert
