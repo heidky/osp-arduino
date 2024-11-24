@@ -19,6 +19,8 @@ public:
     float r_intensity = 0;
     float intensity_alpha = 0.001;
 
+    float duck_current = 0.0;
+
     AudioProcessor(AppManager* manager);
 
     virtual void update_audio_data(Frame* data, uint16_t frameCount);

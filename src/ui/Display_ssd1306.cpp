@@ -67,42 +67,51 @@ void Display_ssd1306::update(State state) {
 
 
 void Display_ssd1306::draw_Main() {
-    uint8_t l_factor = state.l_factor;
-    uint8_t r_factor = state.r_factor;
-    bool bt_connected = state.bt_connected;
+    const uint8_t l_factor = state.l_factor;
+    const uint8_t r_factor = state.r_factor;
+    const bool bt_connected = state.bt_connected;
 
     uint8_t l1 = l_factor / 10;
     uint8_t l2 = l_factor % 10;
     uint8_t r1 = r_factor / 10;
     uint8_t r2 = r_factor % 10;
 
+    const bool ble_connected = state.ble_connected;
+    const int duck_level = state.duck_level;
+
+    // L, R numbers and center icon
+    const int btm = 62;
     display.setFont(&FreeSans18pt7b);
 
-    display.setCursor(0, 30);
+    display.setCursor(0, btm);
     display.print(l1);
-
-    display.setCursor(18+1, 30);
+    display.setCursor(18+1, btm);
     display.print(l2);
 
-    display.setCursor(127-16-2-16-1, 30);
+    display.setCursor(127-16-2-16-1, btm);
     display.print(r1);
-
-    display.setCursor(127-16-1, 30);
+    display.setCursor(127-16-1, btm);
     display.print(r2);
 
+    display.drawBitmap(128/2-8, btm-18, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
+
+    // status indicators
     if(bt_connected) {
-        display.fillRect(128/2-8, -1, 16, 5, WHITE);
+        display.fillRect(128/2-8, -1, 16, 6, WHITE);
     } else {
-        display.drawRect(128/2-8, -1, 16, 5, WHITE);
+        display.drawRect(128/2-8, -1, 16, 6, WHITE);
     }
 
-    display.drawBitmap(128/2-8, 32/2-8+4, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
+    if(ble_connected) {
+        display.fillRect(128/4*3-4, -1, 8, 6, WHITE);
+    } else {
+        display.drawRect(128/4*3-4, -1, 8, 6, WHITE);
+    }
 
-    // display.setFont(&FreeSans12pt7b);
-    // display.setCursor(128/2-8, 32/2+12);
-    
-    // static const char *modes[] = {"B", "A", "T"};
-    // display.print(modes[state.bt_mode]);
+    // duck level
+    display.setFont(&FreeSans9pt7b);
+    display.setCursor(128/4*3-4 + 10, 13);
+    display.print(duck_level);
 }
 
 

@@ -83,6 +83,9 @@ struct State {
     int settings_cursor = 0;
     int settings_invert_lr = false;
     int settings_invert_phase = false;
+
+    bool ble_connected = false;
+    int duck_level = 0;
 };
 
 class AppManager {
@@ -110,6 +113,9 @@ public:
     void inc_settings_cursor(int d);
     void set_invert_lr(bool i);
     void set_invert_phase(bool i);
+
+    void set_ble_connected(bool connected);
+    void set_duck_level(int level);
 
     void action(Action a, void* payload = NULL);
 

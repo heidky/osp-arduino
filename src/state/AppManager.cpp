@@ -428,3 +428,18 @@ void AppManager::set_invert_phase(bool i) {
         updated = true;
     }
 }
+
+void AppManager::set_ble_connected(bool connected) {
+    if(state.ble_connected != connected) {
+        state.ble_connected = connected;
+        updated = true;
+    }
+}
+
+void AppManager::set_duck_level(int level)
+{
+    if(level != state.duck_level) {
+        state.duck_level = level;
+        updated = true;
+    }
+}

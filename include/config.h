@@ -25,3 +25,9 @@
 #define BTN_DEBOUNCE_MILLIS 3
 #define BTN_DOUBLE_PRESS_MILLIS 500
 #define BTN_SLEEP_MILLIS 200
+
+
+// ========== AUDIO PROCESSING =======
+#define DUCK_RISE_TIME 0.33f
+#define DUCK_LEVEL_1 0.6f
+#define DUCK_LEVEL_2 0.3f
