@@ -43,6 +43,9 @@ void bt_state_changed(esp_a2d_connection_state_t s, void*) {
 
     // always start with 0 audio
     a2dp_sink.set_volume(0);
+    
+    Serial.print("connected: ");
+    Serial.println(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
 }
 
 
@@ -50,6 +53,7 @@ void setup() {
     Serial.begin(9600);
     Serial.println("\nOsp start");
 
+    Wire.setPins(GPIO_I2C_SDA, GPIO_I2C_SCL);
     // init display
     display.begin();
 
@@ -76,9 +80,9 @@ void setup() {
 
     // BT INIT
     i2s_pin_config_t i2s_pin_config = {
-        .bck_io_num = 25,
-        .ws_io_num = 27,
-        .data_out_num = 26,
+        .bck_io_num = GPIO_I2S_BCK,
+        .ws_io_num = GPIO_I2S_LCK,
+        .data_out_num = GPIO_I2S_DOUT,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
     a2dp_sink.set_pin_config(i2s_pin_config);
@@ -105,7 +109,7 @@ void setup() {
     a2dp_sink.start(DEVICE_NAME);
 
     manager.updated = true;
-}
+}   
 
 
 void loop() {

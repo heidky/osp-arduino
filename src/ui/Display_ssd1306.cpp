@@ -5,10 +5,11 @@
 #include "Fonts/FreeSans12pt7b.h"
 #include "Fonts/FreeSans9pt7b.h"
 #include "icons.h"
+#include "Wire.h"
 
 
 Display_ssd1306::Display_ssd1306() {
-    display = Adafruit_SSD1306(128, 32, &Wire);
+    display = Adafruit_SSD1306(128, 64, &Wire);
 }
 
 
