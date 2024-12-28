@@ -1,5 +1,6 @@
 // ========== GENERAL ============
-#define DEVICE_NAME "Osp2"
+// #define DEVICE_NAME "Osp2"
+#define DEVICE_NAME "LVS-Osp"
 
 
 // ========== GPIO ============
@@ -28,6 +29,7 @@
 
 
 // ========== AUDIO PROCESSING =======
+#define VIBE_RISE_TIME 0.33f
 #define DUCK_RISE_TIME 0.33f
 #define DUCK_LEVEL_1 0.6f
 #define DUCK_LEVEL_2 0.3f
