@@ -65,7 +65,7 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
 
     /* =====================
     *  => READ DATA
-    */
+    *  ===================== */
     int32_t tmp;
     const float SR = 44100.0f;
 
@@ -88,34 +88,45 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
     const float pulse_freq = manager->state.bt_mode_pulse_freq;
     const float pulse_bias = manager->state.bt_mode_pulse_bias;
 
+    bool vibe_active = manager->state.ble_connected;
     const int16_t duck_level = manager->state.duck_level;
+    const int16_t vibe_level = manager->state.vibe_level;
 
     const float volume_mult = (float)volumeFactor / volumeFactorMax;
     
     /* =====================
     *  => PROCESS STUFF
-    */
-    // reset intensity if bypass
+    *  ===================== */
+    // reset intensity if not needed
     if(!requires_intensity) {
         l_intensity = 0;
         r_intensity = 0;
     }
 
-    // duck level
-    const float duck_step = 1.f / DUCK_RISE_TIME / SR;
-    const float duck_target = duck_level <= 0 ? 1.f : (duck_level == 1 ? DUCK_LEVEL_1 : DUCK_LEVEL_2);
+    // >>> DUCK LEVEL
+    // ------------------------
+    // const float duck_step = 1.f / DUCK_RISE_TIME / SR;
+    // const float duck_target = duck_level <= 0 ? 1.f : (duck_level == 1 ? DUCK_LEVEL_1 : DUCK_LEVEL_2);
 
-    // mults
+    // >>> MULTS
+    // ------------------------
     const float l_mult = ((float)l_factor / LR_FACTOR_MAX) * volume_mult;
     const float r_mult = ((float)r_factor / LR_FACTOR_MAX) * volume_mult;
 
+    const float vibe_step = 1.f / VIBE_RISE_TIME / SR;
+    const float vibe_target = vibe_active ? fclamp((float)vibe_level / 20.0f, 0.0f, 1.0f) : 1.0f;
+
     // long start = millis();
 
+    // >>> FRAME LOOP
+    // ------------------------
     for (int i=0; i<frameCount; i++){
         int32_t l_pcm = data[i].channel1;
         int32_t r_pcm = data[i].channel2;
 
-        // bt mode: am, tens
+        
+        // >>> BT MODE: am, tens
+        // ------------------------
         if(requires_intensity) {
             l_intensity = intensity_alpha * abs(l_pcm) + (1.f - intensity_alpha) * l_intensity;
             r_intensity = intensity_alpha * abs(r_pcm) + (1.f - intensity_alpha) * r_intensity;
@@ -152,7 +163,8 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
             r_pcm = r_pcm * mult;
         }
 
-        // invert
+        // >>> INVERT
+        // ------------------------
         if(invert_phase) {
             r_pcm *= -1;
         }
@@ -163,20 +175,31 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
             r_pcm = tmp;
         }
 
-        // duck calculations
-        const float duck_delta = duck_target - duck_current;
+        // >>> DUCK CALCULATIONS
+        // ------------------------
+        // const float duck_delta = duck_target - duck_current;
 
-        if(abs(duck_delta) < duck_step * 1.01)  duck_current = duck_target;
-        else if (duck_delta > 0) duck_current += duck_step;
-        else if (duck_delta < 0) duck_current -= duck_step;
+        // if(abs(duck_delta) < duck_step * 1.01)  duck_current = duck_target;
+        // else if (duck_delta > 0) duck_current += duck_step;
+        // else if (duck_delta < 0) duck_current -= duck_step;
 
-        const float duck_mult = fclamp(duck_current, 0.0f, 1.0f);
+        // const float duck_mult = fclamp(duck_current, 0.0f, 1.0f);
 
-        // volume
-        l_pcm = l_pcm * l_mult * duck_mult;
-        r_pcm = r_pcm * r_mult * duck_mult;
+        const float vibe_delta = vibe_target - vibe_mult;
 
-        // write result
+        if(abs(vibe_delta) < vibe_step * 1.01)  vibe_mult = vibe_target;
+        else if (vibe_delta > 0) vibe_mult += vibe_step;
+        else if (vibe_delta < 0) vibe_mult -= vibe_step;
+
+        vibe_mult = fclamp(vibe_mult, 0.0f, 1.0f);
+
+        // >>> VOLUME
+        // ------------------------
+        l_pcm = l_pcm * (l_mult * vibe_mult);
+        r_pcm = r_pcm * (r_mult * vibe_mult);
+
+        // >>> WRITE RESULTS
+        // ------------------------
         l_pcm = clamp(l_pcm, INT16_MIN, INT16_MAX);
         r_pcm = clamp(r_pcm, INT16_MIN, INT16_MAX);
 
@@ -184,6 +207,8 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
         data[i].channel2 = r_pcm;
         time += 1;
     }
+
+    // Serial.println(vibe_mult);
 }
 
 

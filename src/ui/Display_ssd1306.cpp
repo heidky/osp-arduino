@@ -78,6 +78,7 @@ void Display_ssd1306::draw_Main() {
 
     const bool ble_connected = state.ble_connected;
     const int duck_level = state.duck_level;
+    const int vibe_level = state.vibe_level;
 
     // L, R numbers and center icon
     const int btm = 62;
@@ -110,8 +111,8 @@ void Display_ssd1306::draw_Main() {
 
     // duck level
     display.setFont(&FreeSans9pt7b);
-    display.setCursor(128/4*3-4 + 10, 13);
-    display.print(duck_level);
+    display.setCursor(128/4*3-4 + 12, 13);
+    display.print(vibe_level);
 }
 
 

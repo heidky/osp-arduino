@@ -20,6 +20,7 @@ public:
     float intensity_alpha = 0.001;
 
     float duck_current = 0.0;
+    float vibe_mult = 0.0;
 
     AudioProcessor(AppManager* manager);
 

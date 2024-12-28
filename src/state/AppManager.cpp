@@ -432,6 +432,12 @@ void AppManager::set_invert_phase(bool i) {
 void AppManager::set_ble_connected(bool connected) {
     if(state.ble_connected != connected) {
         state.ble_connected = connected;
+
+        if(!connected) {
+            state.r_factor = 0;
+            state.l_factor = 0;
+        }
+        
         updated = true;
     }
 }
@@ -440,6 +446,14 @@ void AppManager::set_duck_level(int level)
 {
     if(level != state.duck_level) {
         state.duck_level = level;
+        updated = true;
+    }
+}
+
+void AppManager::set_vibe_level(int level)
+{
+    if(level != state.vibe_level) {
+        state.vibe_level = level;
         updated = true;
     }
 }

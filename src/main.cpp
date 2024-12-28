@@ -9,6 +9,7 @@
 #include "input/RotaryEncoder.h"
 #include "input/Button.h"
 #include "audio/AudioProcessor.h"
+#include "ble/BLEManager.h"
 
 // #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 // #include <esp_log.h>
@@ -25,6 +26,9 @@ TaskHandle_t Task_display;
 
 AppManager manager;
 AudioProcessor audio_processor(&manager);
+BLEManager ble(&manager);
+
+
 RotaryEncoder l_encoder(GPIO_ROTARY_L_CLK, GPIO_ROTARY_L_DT);
 Button l_button(GPIO_ROTARY_L_SW);
 RotaryEncoder r_encoder(GPIO_ROTARY_R_CLK, GPIO_ROTARY_R_DT);
@@ -57,28 +61,7 @@ void bt_state_changed(esp_a2d_connection_state_t s, void*) {
 }
 
 
-//Setup callbacks onConnect and onDisconnect
-class MyServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
-    manager.set_ble_connected(true);
-  };
-  void onDisconnect(BLEServer* pServer) {
-    manager.set_ble_connected(false);
-    BLEDevice::startAdvertising();
-  }
-};
 
-class MyCharCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic* pCharacteristic) {
-        size_t len = pCharacteristic->getLength();
-        uint8_t* data = pCharacteristic->getData();
-
-        if(len > 0) {
-            uint8_t duck_level = data[0];
-            manager.set_duck_level(duck_level);
-        }
-    }
-};
 
 void setup() {
     Serial.begin(115200);
@@ -140,30 +123,7 @@ void setup() {
     a2dp_sink.set_default_bt_mode(ESP_BT_MODE_BTDM);  // allows for BLE
     a2dp_sink.start(DEVICE_NAME);
 
-    BLEDevice::init("OSP BLE");
-    BLEServer *pServer = BLEDevice::createServer();
-    pServer->setCallbacks(new MyServerCallbacks());
-
-    BLEService *pService = pServer->createService(SERV_UUID);
-    
-    BLECharacteristic *pCharacteristic = pService->createCharacteristic(
-                                            CHAR_UUID,
-                                            BLECharacteristic::PROPERTY_READ |
-                                            BLECharacteristic::PROPERTY_WRITE
-                                        );
-    pCharacteristic->setValue("\0\0\0");
-    pCharacteristic->setCallbacks(new MyCharCallbacks());
-
-    pService->start();
-
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERV_UUID);
-    pAdvertising->setScanResponse(true);
-    pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-    pAdvertising->setMinPreferred(0x12);
-
-    BLEDevice::startAdvertising();
-    Serial.println("Characteristic defined! Now you can read it in your phone!");
+    ble.init(DEVICE_NAME);
 
     manager.updated = true;
 }   

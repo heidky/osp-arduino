@@ -86,6 +86,7 @@ struct State {
 
     bool ble_connected = false;
     int duck_level = 0;
+    int vibe_level = 0;
 };
 
 class AppManager {
@@ -116,6 +117,7 @@ public:
 
     void set_ble_connected(bool connected);
     void set_duck_level(int level);
+    void set_vibe_level(int level);
 
     void action(Action a, void* payload = NULL);
 
