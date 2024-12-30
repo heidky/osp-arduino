@@ -10,4 +10,6 @@ public:
     BLEManager(AppManager* manager);
 
     void init(const char *device_name);
+
+    static float vibe_level_to_mult(int level);
 };

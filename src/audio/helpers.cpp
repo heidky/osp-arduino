@@ -41,12 +41,15 @@ float square(float x) {
 // ==================================
 // ======== MULT            =========
 // ==================================
+static constexpr float MULT_EXP_BIAS = (1.f/64.f);
+
 Mult::Mult() {
     value = 0.0;
 }
 
 void Mult::smooth_update(float target, float step) {
     const float delta = target - value;
+    step *= (abs(delta) + MULT_EXP_BIAS); // exp smoothing
     float new_value = value;
 
     if(abs(delta) < step * 1.01)  new_value = target;
@@ -58,6 +61,7 @@ void Mult::smooth_update(float target, float step) {
 
 void Mult::smooth_increase(float target, float step) {
     const float delta = target - value;
+    step *= (abs(delta) + MULT_EXP_BIAS); // exp smoothing
     float new_value = value;
 
     if(abs(delta) < step * 1.01)  new_value = target;

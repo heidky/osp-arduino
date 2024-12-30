@@ -154,3 +154,20 @@ void BLEManager::init(const char *device_name)
     BLEDevice::startAdvertising();
     Serial.println("LVS BLE advertising!");
 }
+
+
+float BLEManager::vibe_level_to_mult(int level) {
+    if(level <= 0) return 0.0f;
+    else if (level >= VIBE_LEVEL_MAX) return 1.0f;
+
+    switch (level) {
+        case 1: return 0.2f; 
+        case 2: return 0.4f; 
+        case 3: return 0.5f; 
+        case 4: return 0.6f; 
+        default: break;
+    }
+
+    const float result = 0.6f + 0.4f * ((float)(level - 4) / (float)(VIBE_LEVEL_MAX - 4));
+    return result > 1.f ? 1.f : (result < 0.f ? 0.f : result);
+}

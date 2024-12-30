@@ -38,7 +38,7 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
 
     const bool is_vibe_active = state.ble_connected;
     const float vibe_step = 1.f / VIBE_RISE_TIME / SR;
-    const float vibe_target = is_vibe_active ? fclamp((float)state.vibe_level / VIBE_LEVEL_MAX, 0.0f, 1.0f) : 1.0f;
+    const float vibe_target = is_vibe_active ? BLEManager::vibe_level_to_mult(state.vibe_level) : 1.0f;
 
     // const float duck_step = 1.f / DUCK_RISE_TIME / SR;
     // const float duck_target = duck_level <= 0 ? 1.f : (duck_level == 1 ? DUCK_LEVEL_1 : DUCK_LEVEL_2);
@@ -131,5 +131,9 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
         time += 1;
     }
 
-    // Serial.println(vibe_mult);
+    // Serial.print(l_mult.value * 100);
+    // Serial.print(", ");
+    // Serial.print(r_mult.value * 100);
+    // Serial.print(", ");
+    // Serial.println(vibe_mult.value * 100);
 }
