@@ -2,7 +2,6 @@
 
 #include "state/AppManager.h"
 
-#define LR_FACTOR_MAX 99
 
 
 class BLEManager {

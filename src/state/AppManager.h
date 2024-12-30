@@ -89,6 +89,10 @@ struct State {
     int vibe_level = 0;
 };
 
+#define LR_FACTOR_MAX 99
+#define VIBE_LEVEL_MAX 20
+
+
 class AppManager {
 public:
     bool updated = false;

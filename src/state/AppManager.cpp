@@ -289,8 +289,8 @@ void AppManager::set_page(Page p) {
 void AppManager::set_l_factor(int16_t factor) {
     if (factor < 0) {
         factor = 0;
-    } else if (factor > 99) {
-        factor = 99;
+    } else if (factor > LR_FACTOR_MAX) {
+        factor = LR_FACTOR_MAX;
     }
 
     if(state.l_factor != factor) {
@@ -302,8 +302,8 @@ void AppManager::set_l_factor(int16_t factor) {
 void AppManager::set_r_factor(int16_t factor) {
     if (factor < 0) {
         factor = 0;
-    } else if (factor > 99) {
-        factor = 99;
+    } else if (factor > LR_FACTOR_MAX) {
+        factor = LR_FACTOR_MAX;
     }
 
     if(state.r_factor != factor) {
@@ -452,6 +452,12 @@ void AppManager::set_duck_level(int level)
 
 void AppManager::set_vibe_level(int level)
 {
+    if (level < 0) {
+        level = 0;
+    } else if (level > VIBE_LEVEL_MAX) {
+        level = VIBE_LEVEL_MAX;
+    }
+
     if(level != state.vibe_level) {
         state.vibe_level = level;
         updated = true;
