@@ -83,17 +83,8 @@ void Display_ssd1306::draw_Main() {
     // L, R numbers and center icon
     const int btm = 62;
     display.setFont(&FreeSans18pt7b);
-
-    display.setCursor(0, btm);
-    display.print(l1);
-    display.setCursor(18+1, btm);
-    display.print(l2);
-
-    display.setCursor(127-16-2-16-1, btm);
-    display.print(r1);
-    display.setCursor(127-16-1, btm);
-    display.print(r2);
-
+    draw_2_digit_number(l1, l2, 1,     btm, 19, false);
+    draw_2_digit_number(r1, r2, 127+1, btm, 19, true);
     display.drawBitmap(128/2-8, btm-18, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
 
     // status indicators
@@ -104,12 +95,17 @@ void Display_ssd1306::draw_Main() {
     }
 
     if(ble_connected) {
-        display.fillRect(128/4*3-4, -1, 8, 6, WHITE);
+        display.fillRect(128/2+8+1, -1, 8, 6, WHITE);
     } else {
-        display.drawRect(128/4*3-4, -1, 8, 6, WHITE);
+        display.drawRect(128/2+8+1, -1, 8, 6, WHITE);
     }
+    
+    // shadow factors
+    // display.setFont(&FreeSans12pt7b);
+    // draw_2_digit_number(l1, l2, 1,     btm - 27, 13, false);
+    // draw_2_digit_number(r1, r2, 127+1, btm - 27, 13, true);
 
-    // duck level
+    // vibe level
     display.setFont(&FreeSans9pt7b);
     display.setCursor(128/4*3-4 + 12, 13);
     display.print(vibe_level);
@@ -117,22 +113,24 @@ void Display_ssd1306::draw_Main() {
 
 
 void Display_ssd1306::draw_BtMode_Selection() {
-    display.setFont(&FreeSansBold12pt7b);
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Mode", false);
 
-    // draw_text(6, 20, "B");
-    // draw_text(6+16+10, 20, "A");
-    // draw_text(6+16+10+16+10, 20, "T");
+    const int16_t top = 32;
     for(int i = 0; i < EPD_BITMAP_BT_MODES_NUM; i++)
-        display.drawBitmap(6 + (10+16)*i, 4, epd_bitmap_bt_modes[i], 16, 16, WHITE);
+        display.drawBitmap(6 + (10+16)*i, top, epd_bitmap_bt_modes[i], 16, 16, WHITE);
 
-    display.drawRect(6 + (10+16) * state.bt_mode_cursor, 32-6, 16, 4, WHITE);
-    display.fillRect(6 + (10+16) * state.bt_mode, 32-6, 16, 4, WHITE);
+    display.drawRect(6 + (10+16) * state.bt_mode_cursor,  top+16+6, 16, 4, WHITE);
+    display.fillRect(6 + (10+16) * state.bt_mode,         top+16+6, 16, 4, WHITE);
 }
 
 
 void Display_ssd1306::draw_BtMode_Pulse() {
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Freq", false);
+    draw_text(127-3, 12, "Bias", true);
+
     display.setFont(&FreeSans9pt7b);
-    
     String l = String(state.bt_mode_pulse_freq) + "Hz";
     String r = String(state.bt_mode_pulse_bias) + "%";
 
@@ -145,19 +143,25 @@ void Display_ssd1306::draw_BtMode_Pulse() {
 
 
 void Display_ssd1306::draw_BtMode_AM() {
-    display.setFont(&FreeSans12pt7b);
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Shape", false);
+    draw_text(127-3, 12, "Freq", true);
 
+    display.setFont(&FreeSans12pt7b);
     // draw_text(3, 30, state.bt_mode_am_shape, false, false);
     const unsigned char *shape_icon = epd_bitmap_shapes[state.bt_mode_am_shape];
-    display.drawBitmap(2, 32/2-6, shape_icon, 16, 16, WHITE);
+    display.drawBitmap(3, 18+4, shape_icon, 16, 16, WHITE);
     String f(state.bt_mode_am_freq);
-    draw_text(127-3, 30, (f + "Hz").c_str(), false, true);
+    draw_text(127-3, 32+4, (f + "Hz").c_str(), false, true);
 }
 
 
 void Display_ssd1306::draw_BtMode_Tens() {
-    display.setFont(&FreeSans9pt7b);
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Width", false);
+    draw_text(127-3, 12, "Freq", true);
 
+    display.setFont(&FreeSans9pt7b);
     int wi = roundf(state.bt_mode_tens_width * (1e6f / 44100.f));
     draw_text(3, 30, (String(wi) + "us").c_str(), false, false);
     
@@ -166,33 +170,34 @@ void Display_ssd1306::draw_BtMode_Tens() {
 }
 
 void Display_ssd1306::draw_Settings() {
-    display.setFont(&FreeSansBold12pt7b);
-
-    // draw_text(6, 20, "I");
-    // draw_text(6+16+10, 20, "R");
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Settings", false);
+    
+    const int16_t top = 32;
     for(int i = 0; i < EPD_BITMAP_SETTINGS_NUM; i++)
-        display.drawBitmap(6 + (10+16)*i, 4, epd_bitmap_settings[i], 16, 16, WHITE);
+        display.drawBitmap(6 + (10+16)*i, top, epd_bitmap_settings[i], 16, 16, WHITE);
 
-    display.drawRect(6 + (10+16) * state.settings_cursor, 32-6, 16, 4, WHITE);
+    display.drawRect(6 + (10+16) * state.settings_cursor, top+16+6, 16, 4, WHITE);
 }
 
 void Display_ssd1306::draw_Settings_Invert() {
     display.setFont(&FreeSans6pt7b);
-    draw_text(2, 2, "L/R", true, false);
-    draw_text(127-2, 2, "Phase", true, true);
+    draw_text(2, 2, "L/R", false);
+    draw_text(127-2, 2, "Phase", true);
 
     const char *lr_state = state.settings_invert_lr ? "ON" : "OFF";
     const char *phase_state = state.settings_invert_phase ? "ON" : "OFF";
     
     display.setFont(&FreeSans9pt7b);
-    draw_text(2, 31-2, lr_state, false, false);
-    draw_text(127-2, 31-2, phase_state, false, true);
+    draw_text(2, 31-2, lr_state, false);
+    draw_text(127-2, 31-2, phase_state, true);
 }
 
 void Display_ssd1306::draw_Settings_Ramp() {
     display.setFont(&FreeSansBold12pt7b);
     
-    draw_text(0, 30, "Ramp");
+    display.setCursor(4, 42);
+    display.print("Ramp~WIP");
 }
 
 
@@ -202,6 +207,17 @@ void Display_ssd1306::draw_Settings_Ramp() {
 void Display_ssd1306::draw_text(int16_t x, int16_t y, int s, bool top, bool right) {
     String s0(s);
     draw_text(x, y, s0.c_str(), top, right);
+}
+
+void Display_ssd1306::draw_text(int16_t x, int16_t y, const char* s, bool right) {
+    int16_t x0, y0;
+    uint16_t w, h;
+    display.getTextBounds(s, 0, 0, &x0, &y0, &w, &h);
+
+    if(right) x -= (w + 2);
+
+    display.setCursor(x, y);
+    display.print(s);
 }
 
 void Display_ssd1306::draw_text(int16_t x, int16_t y, const char* s, bool top, bool right) {
@@ -214,4 +230,19 @@ void Display_ssd1306::draw_text(int16_t x, int16_t y, const char* s, bool top, b
 
     display.setCursor(x, y);
     display.print(s);
+}
+
+void Display_ssd1306::draw_2_digit_number(int16_t d1, int16_t d2, int16_t x, int16_t y_btm, int16_t spacing, bool reverse) {
+    if(!reverse) {
+        display.setCursor(x, y_btm);
+        display.print(d1);
+        display.setCursor(x + spacing, y_btm);
+        display.print(d2);
+    }
+    else {
+        display.setCursor(x - spacing*2, y_btm);
+        display.print(d1);
+        display.setCursor(x - spacing, y_btm);
+        display.print(d2);
+    }
 }
