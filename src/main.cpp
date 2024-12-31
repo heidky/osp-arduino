@@ -9,6 +9,7 @@
 #include "input/RotaryEncoder.h"
 #include "input/Button.h"
 #include "audio/AudioProcessor.h"
+#include "audio/BTOutput.h"
 #include "ble/BLEManager.h"
 
 // #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -21,8 +22,10 @@
 // #define INTERNAL_DAC
 
 Display_ssd1306 display;
-BluetoothA2DPSink a2dp_sink;
 TaskHandle_t Task_display;
+
+BTOutput bt_output;
+BluetoothA2DPSink a2dp_sink;
 
 AppManager manager;
 AudioProcessor audio_processor(&manager);
@@ -93,6 +96,8 @@ void setup() {
     );
 
     // BT INIT
+    a2dp_sink.set_output(bt_output);
+
     i2s_pin_config_t i2s_pin_config = {
         .bck_io_num = GPIO_I2S_BCK,
         .ws_io_num = GPIO_I2S_LCK,
