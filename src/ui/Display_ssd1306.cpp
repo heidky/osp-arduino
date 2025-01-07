@@ -54,6 +54,9 @@ void Display_ssd1306::update(State state) {
     case Page::Settings:
         draw_Settings();
         break;
+    case Page::Settings_Source:
+        draw_Settings_Source();
+        break;
     case Page::Settings_Invert:
         draw_Settings_Invert();
         break;
@@ -109,6 +112,10 @@ void Display_ssd1306::draw_Main() {
     display.setFont(&FreeSans9pt7b);
     display.setCursor(128/4*3-4 + 12, 13);
     display.print(vibe_level);
+
+    display.setFont(&FreeSans6pt7b);
+    const char *source_text = (state.source_mode == SOURCE_BT) ? "BT" : "Gen";
+    draw_text(3, 12, source_text, false);
 }
 
 
@@ -172,7 +179,7 @@ void Display_ssd1306::draw_BtMode_Tens() {
 void Display_ssd1306::draw_Settings() {
     display.setFont(&FreeSans6pt7b);
     draw_text(3, 12, "Settings", false);
-    
+
     const int16_t top = 32;
     for(int i = 0; i < EPD_BITMAP_SETTINGS_NUM; i++)
         display.drawBitmap(6 + (10+16)*i, top, epd_bitmap_settings[i], 16, 16, WHITE);
@@ -180,10 +187,22 @@ void Display_ssd1306::draw_Settings() {
     display.drawRect(6 + (10+16) * state.settings_cursor, top+16+6, 16, 4, WHITE);
 }
 
+void Display_ssd1306::draw_Settings_Source() {
+    display.setFont(&FreeSans6pt7b);
+    draw_text(3, 12, "Source Mode", false);
+    const int16_t top = 32;
+
+    for(int i = 0; i < EPD_BITMAP_SOURCES_NUM; i++)
+        display.drawBitmap(6 + (10+16)*i, top, epd_bitmap_sources[i], 16, 16, WHITE);
+
+    display.drawRect(6 + (10+16) * state.source_mode_cursor, top+16+6, 16, 4, WHITE);
+    display.fillRect(6 + (10+16) * state.source_mode,        top+16+6, 16, 4, WHITE);
+}
+
 void Display_ssd1306::draw_Settings_Invert() {
     display.setFont(&FreeSans6pt7b);
-    draw_text(2, 2, "L/R", false);
-    draw_text(127-2, 2, "Phase", true);
+    draw_text(3, 12, "L/R", false);
+    draw_text(127-3, 12, "Phase", true);
 
     const char *lr_state = state.settings_invert_lr ? "ON" : "OFF";
     const char *phase_state = state.settings_invert_phase ? "ON" : "OFF";

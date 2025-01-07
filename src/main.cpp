@@ -168,12 +168,4 @@ void loop() {
     delay(1);
     yield();
 }
-
-
-// int16_t x, y;
-// uint16_t w, h;
-// display.getTextBounds("0", 0, 0, &x, &y, &w, &h);
-// Serial.println(x);
-// Serial.println(y);
-// Serial.println(w);
-// Serial.println(h);
+ 

@@ -22,6 +22,9 @@ void AppManager::action(Action a, void* payload) {
     case Page::Settings:
         page_Settings(a, payload);
         break;
+    case Page::Settings_Source:
+        page_Settings_Source(a, payload);
+        break;
     case Page::Settings_Invert:
         page_Settings_Invert(a, payload);
         break;
@@ -213,12 +216,42 @@ void AppManager::page_Settings(Action a, void* payload) {
     }
     case Action::PressM: {
         const int s = state.settings_cursor;
-        if(s == SETTINGS_INVERT) {
+
+        if(s == SETTINGS_SOURCE) {
+            set_page(Page::Settings_Source);
+        }
+        else if(s == SETTINGS_INVERT) {
             set_page(Page::Settings_Invert);
         }
         else if(s == SETTINGS_RAMP) {
             set_page(Page::Settings_Ramp);
         }
+        break;
+    }
+    }
+}
+
+void AppManager::page_Settings_Source(Action a, void *payload)
+{
+    switch (a) 
+    {
+    case Action::ValueL:
+    case Action::ValueR: {
+        int d = *(int*)payload;
+        inc_source_cursor(d);
+        break;
+    }
+    case Action::PressL: {
+        set_l_factor(0);
+        break;
+    }
+    case Action::PressR: {
+        set_r_factor(0);
+        break;
+    }
+    case Action::PressM: {
+        set_source_mode(state.source_mode_cursor);
+        set_page(Page::Main);
         break;
     }
     }
@@ -415,6 +448,14 @@ void AppManager::inc_settings_cursor(int d) {
     updated = true;
 }
 
+void AppManager::inc_source_cursor(int d) {
+    if(d == 0) return;
+
+    state.source_mode_cursor = (state.source_mode_cursor + d + NUM_SOURCES) % NUM_SOURCES;
+    updated = true;
+}
+
+
 void AppManager::set_invert_lr(bool i) {
     if(i != state.settings_invert_lr) {
         state.settings_invert_lr = i;
@@ -460,6 +501,18 @@ void AppManager::set_vibe_level(int level)
 
     if(level != state.vibe_level) {
         state.vibe_level = level;
+        updated = true;
+    }
+}
+
+void AppManager::set_source_mode(int mode)
+{
+    if (mode < 0 || mode > NUM_SOURCES) return;
+
+    if(mode != state.source_mode) {
+        state.l_factor = 0;  // zero volume on source_change
+        state.r_factor = 0;
+        state.source_mode = mode;
         updated = true;
     }
 }

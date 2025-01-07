@@ -20,6 +20,7 @@ protected:
     void draw_BtMode_Tens();
 
     void draw_Settings();
+    void draw_Settings_Source();
     void draw_Settings_Invert();
     void draw_Settings_Ramp();
 

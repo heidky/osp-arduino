@@ -21,6 +21,7 @@ enum class Page {
     BtMode_Tens,
 
     Settings,
+    Settings_Source,
     Settings_Invert,
     Settings_Ramp,
 };
@@ -57,15 +58,23 @@ enum class Page {
 #define TENS_FREQ_MIN 10
 #define TENS_FREQ_MAX 500
 
-#define NUM_SETTINGS 2
-#define SETTINGS_INVERT 0
-#define SETTINGS_RAMP 1
+#define NUM_SETTINGS 3
+#define SETTINGS_SOURCE 0
+#define SETTINGS_INVERT 1
+#define SETTINGS_RAMP 2
+
+#define NUM_SOURCES 2
+#define SOURCE_BT 0
+#define SOURCE_GEN 1
 
 
 struct State {
     Page page = Page::Main;
     uint8_t l_factor = 0;
     uint8_t r_factor = 0;
+
+    int source_mode = SOURCE_BT;
+    int source_mode_cursor = SOURCE_BT;
 
     bool bt_connected = false;
     int bt_mode = BTMODE_BYPASS;
@@ -123,6 +132,9 @@ public:
     void set_duck_level(int level);
     void set_vibe_level(int level);
 
+    void inc_source_cursor(int d);
+    void set_source_mode(int mode);
+
     void action(Action a, void* payload = NULL);
 
 protected:
@@ -134,6 +146,7 @@ protected:
     void page_BtMode_Tens(Action a, void* payload);
 
     void page_Settings(Action a, void* payload);
+    void page_Settings_Source(Action a, void* payload);
     void page_Settings_Invert(Action a, void* payload);
     void page_Settings_Ramp(Action a, void* payload);
 };
