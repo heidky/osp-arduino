@@ -101,8 +101,8 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
             }
             else if(extract_cmd_data(PREFIX_REMOTE_BUTTONS, buff, col_ptr, &data)) {
                 if(data == 0) s_manager->set_remote_score(0);
-                else if(data == 10 || data == 11) s_manager->set_remote_score(1);
-                else if (data == 1) s_manager->set_remote_score(-1);
+                else if(data == 10 ) s_manager->set_remote_score(1);
+                else if (data == 1 || data == 11) s_manager->set_remote_score(-1);
             } 
         }
     }
