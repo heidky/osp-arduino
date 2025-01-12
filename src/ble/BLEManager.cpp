@@ -66,6 +66,7 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
         buff[len] = '\0';
         
         // Serial.println(buff);
+        // Serial.println(uxTaskPriorityGet(NULL));  // prints 19
 
         // check commands
         if (strncmp(buff, "DeviceType;", len) == 0) {

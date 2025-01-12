@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <BluetoothA2DPSink.h>
+// #include <BluetoothA2DPSinkQueued.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 
@@ -22,6 +23,7 @@
 
 Display_ssd1306 display;
 BluetoothA2DPSink a2dp_sink;
+// BluetoothA2DPSinkQueued a2dp_sink;
 TaskHandle_t Task_display;
 
 AppManager manager;
@@ -114,8 +116,27 @@ void setup() {
         .use_apll = false,
         // .tx_desc_auto_clear = false,
     };
-    a2dp_sink.set_i2s_config(i2s_config);
+#else
+    // setup default i2s config
+    static const i2s_config_t i2s_config = {
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+        .sample_rate = 44100,  // updated by a2dp_sink when needed
+        .bits_per_sample = (i2s_bits_per_sample_t)16,
+        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+        .communication_format = (i2s_comm_format_t)I2S_COMM_FORMAT_STAND_I2S,
+        .intr_alloc_flags = 0,  // default interrupt priority
+        // .dma_buf_count = 8,
+        // .dma_buf_len = 64,
+        .dma_buf_count = 4, // bigger buffer to accomodate a full bt data transmission
+        .dma_buf_len = 512,
+        .use_apll = false,
+        .tx_desc_auto_clear = true,  // avoiding noise in case of data unavailability
+        .fixed_mclk = 0,
+        .mclk_multiple = (i2s_mclk_multiple_t) 0, // I2S_MCLK_MULTIPLE_DEFAULT
+        .bits_per_chan = I2S_BITS_PER_CHAN_DEFAULT
+    };
 #endif
+    a2dp_sink.set_i2s_config(i2s_config);
 
     a2dp_sink.set_volume_control(&audio_processor);
     a2dp_sink.set_on_connection_state_changed(&bt_state_changed);

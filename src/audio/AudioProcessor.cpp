@@ -169,4 +169,5 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
     Serial.print(remote_mult.value * 100);
     Serial.println();
 #endif
+    // Serial.println(uxTaskPriorityGet(NULL));  // prints 19
 }
