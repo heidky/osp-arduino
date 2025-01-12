@@ -436,6 +436,8 @@ void AppManager::set_ble_connected(bool connected) {
         if(!connected) {
             state.r_factor = 0;
             state.l_factor = 0;
+            state.vibe_level = 0;
+            state.remote_score = 0;
         }
         
         updated = true;
@@ -460,6 +462,16 @@ void AppManager::set_vibe_level(int level)
 
     if(level != state.vibe_level) {
         state.vibe_level = level;
+        updated = true;
+    }
+}
+
+void AppManager::set_remote_score(int score)
+{   
+    if(score > 1 || score < -1) return;
+
+    if(score != state.remote_score) {
+        state.remote_score = score;
         updated = true;
     }
 }

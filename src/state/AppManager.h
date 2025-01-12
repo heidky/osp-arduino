@@ -87,6 +87,7 @@ struct State {
     bool ble_connected = false;
     int duck_level = 0;
     int vibe_level = 0;
+    int32_t remote_score = 0;
 };
 
 #define LR_FACTOR_MAX 99
@@ -122,6 +123,7 @@ public:
     void set_ble_connected(bool connected);
     void set_duck_level(int level);
     void set_vibe_level(int level);
+    void set_remote_score(int score);
 
     void action(Action a, void* payload = NULL);
 

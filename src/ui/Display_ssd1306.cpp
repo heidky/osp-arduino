@@ -79,6 +79,7 @@ void Display_ssd1306::draw_Main() {
     const bool ble_connected = state.ble_connected;
     const int duck_level = state.duck_level;
     const int vibe_level = state.vibe_level;
+    const int remote_score = state.remote_score;
 
     // L, R numbers and center icon
     const int btm = 62;
@@ -109,6 +110,14 @@ void Display_ssd1306::draw_Main() {
     display.setFont(&FreeSans9pt7b);
     display.setCursor(128/4*3-4 + 12, 13);
     display.print(vibe_level);
+
+    if(remote_score != 0) {
+        display.setFont(&FreeSans6pt7b);
+        if(remote_score > 0) 
+            draw_text(128/2-8, 16+12, "UP", false);
+        else
+            draw_text(128/2-8-2, 16+12, "DW", false);
+    }
 }
 
 
