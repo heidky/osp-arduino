@@ -67,6 +67,7 @@ struct State {
     uint8_t l_factor = 0;
     uint8_t r_factor = 0;
 
+    // BT AUDIO
     bool bt_connected = false;
     int bt_mode = BTMODE_BYPASS;
     int bt_mode_cursor = BTMODE_BYPASS;
@@ -80,13 +81,15 @@ struct State {
     int bt_mode_tens_width = 6;
     int bt_mode_tens_freq = 130;
 
+    // SETTINGS
     int settings_cursor = 0;
     int settings_invert_lr = false;
     int settings_invert_phase = false;
 
+    // BLE
     bool ble_connected = false;
-    int duck_level = 0;
     int vibe_level = 0;
+    bool vibe_active = false;
     int32_t remote_score = 0;
 };
 
@@ -121,8 +124,9 @@ public:
     void set_invert_phase(bool i);
 
     void set_ble_connected(bool connected);
-    void set_duck_level(int level);
-    void set_vibe_level(int level);
+    void set_vibe_level(int level, bool activate=false);
+
+
     void set_remote_score(int score);
 
     void action(Action a, void* payload = NULL);

@@ -15,7 +15,6 @@ public:
     float intensity_r = 0;
     float intensity_alpha = 0.001;
 
-    // float duck_current = 0.0;
     Mult l_mult;
     Mult r_mult;
     Mult vibe_mult;

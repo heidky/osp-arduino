@@ -77,7 +77,7 @@ void Display_ssd1306::draw_Main() {
     uint8_t r2 = r_factor % 10;
 
     const bool ble_connected = state.ble_connected;
-    const int duck_level = state.duck_level;
+    const bool vibe_active = state.vibe_active;
     const int vibe_level = state.vibe_level;
     const int remote_score = state.remote_score;
 
@@ -106,17 +106,20 @@ void Display_ssd1306::draw_Main() {
     // draw_2_digit_number(l1, l2, 1,     btm - 27, 13, false);
     // draw_2_digit_number(r1, r2, 127+1, btm - 27, 13, true);
 
+    const int mod_btm = 16+12;
     // vibe level
-    display.setFont(&FreeSans9pt7b);
-    display.setCursor(128/4*3-4 + 12, 13);
-    display.print(vibe_level);
-
-    if(remote_score != 0) {
+    if(vibe_active) {
+        display.setFont(&FreeSans6pt7b);
+        display.setCursor(128/2-4-8-2, mod_btm);
+        display.print('V');
+        draw_2_digit_number(vibe_level, 128/2-4, mod_btm, 6+1, false);
+    }
+    else if(remote_score != 0) {
         display.setFont(&FreeSans6pt7b);
         if(remote_score > 0) 
-            draw_text(128/2-8, 16+12, "UP", false);
+            draw_text(128/2-8, mod_btm, "UP", false);
         else
-            draw_text(128/2-8-2, 16+12, "DW", false);
+            draw_text(128/2-8-2, mod_btm, "DW", false);
     }
 }
 
@@ -254,4 +257,10 @@ void Display_ssd1306::draw_2_digit_number(int16_t d1, int16_t d2, int16_t x, int
         display.setCursor(x - spacing, y_btm);
         display.print(d2);
     }
+}
+
+void Display_ssd1306::draw_2_digit_number(int16_t d12, int16_t x, int16_t y_btm, int16_t spacing, bool reverse) {
+    uint8_t d1 = d12 / 10;
+    uint8_t d2 = d12 % 10;
+    draw_2_digit_number(d1, d2, x, y_btm, spacing, reverse);
 }

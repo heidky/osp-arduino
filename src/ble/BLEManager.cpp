@@ -92,7 +92,7 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
 
                 // > UPDATE STATE
                 // Serial.println((int) data);
-                s_manager->set_vibe_level(data);
+                s_manager->set_vibe_level(data, true);
 
                 // > REPLY OK
                 s_rx_charasteric->setValue("Ok;"); // reply full battery
@@ -106,20 +106,6 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
         }
     }
 };
-
-
-// class MyCharCallbacks: public BLECharacteristicCallbacks {
-//     void onWrite(BLECharacteristic* pCharacteristic) {
-//         size_t len = pCharacteristic->getLength();
-//         uint8_t* data = pCharacteristic->getData();
-
-//         if(len > 0) {
-//             uint8_t duck_level = data[0];
-//             manager.set_duck_level(duck_level);
-//         }
-//     }
-// };
-
 
 BLEManager::BLEManager(AppManager *manager)
 {

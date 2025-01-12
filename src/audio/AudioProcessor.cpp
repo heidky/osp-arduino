@@ -36,12 +36,9 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
     const float r_mult_target = fclamp((float)state.r_factor / LR_FACTOR_MAX, 0.f, 1.f) * volume_mult;
     const float lr_mult_step = 1.f / LR_RISE_TIME / SR;
 
-    const bool is_vibe_active = state.ble_connected;
+    const bool is_vibe_active = state.vibe_active;
     const float vibe_step = 1.f / VIBE_RISE_TIME / SR;
     const float vibe_target = is_vibe_active ? BLEManager::vibe_level_to_mult(state.vibe_level) : 1.0f;
-
-    // const float duck_step = 1.f / DUCK_RISE_TIME / SR;
-    // const float duck_target = duck_level <= 0 ? 1.f : (duck_level == 1 ? DUCK_LEVEL_1 : DUCK_LEVEL_2);
 
     const bool requires_intensity = state.bt_mode == BTMODE_AM || state.bt_mode == BTMODE_TENS;
     const ShapeFunction shape_function = shape_functions[state.bt_mode_am_shape];
