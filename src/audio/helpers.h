@@ -37,4 +37,5 @@ public:
     Mult();
     void smooth_update(float target, float step);
     void smooth_increase(float target, float step);
+    void linear_update(float target, float step, float max = 1.f);
 };
