@@ -11,6 +11,7 @@
 #include "audio/AudioProcessor.h"
 #include "audio/BTOutput.h"
 #include "ble/BLEManager.h"
+#include "audio/SoundGenerator.h"
 
 // #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 // #include <esp_log.h>
@@ -30,6 +31,9 @@ BluetoothA2DPSink a2dp_sink;
 AppManager manager;
 AudioProcessor audio_processor(&manager);
 BLEManager ble(&manager);
+
+SoundGenerator generator(&manager);
+I2SRouter router;
 
 
 RotaryEncoder l_encoder(GPIO_ROTARY_L_CLK, GPIO_ROTARY_L_DT);
@@ -63,6 +67,11 @@ void bt_state_changed(esp_a2d_connection_state_t s, void*) {
     Serial.println(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
 }
 
+
+void router_update_output() {
+    const OutputChoice output = manager.state.source_mode == SOURCE_BT ? OutputChoice::Bt : OutputChoice::Gen;
+    router.set_selected_output(output);
+}
 
 
 
@@ -104,7 +113,16 @@ void setup() {
         .data_out_num = GPIO_I2S_DOUT,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
-    a2dp_sink.set_pin_config(i2s_pin_config);
+    // a2dp_sink.set_pin_config(i2s_pin_config);
+
+    router.set_pin_config(i2s_pin_config);
+    generator.router = &router;
+    bt_output.router = &router;
+
+    router_update_output();
+    router.begin();
+
+    generator.start();
 
 #ifdef INTERNAL_DAC
     static const i2s_config_t i2s_config = {
@@ -157,6 +175,7 @@ void loop() {
     if(m_button.read() == 1) {
         if(millis() - m_millis >= BTN_DOUBLE_PRESS_MILLIS) {
             manager.action(Action::PressM);
+            router_update_output(); // only does stuff if needed
         }
         else {
             manager.action(Action::DoublePressM);

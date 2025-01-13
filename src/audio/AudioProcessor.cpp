@@ -29,6 +29,12 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
     int32_t pcm_swap;
     State state = manager->state;
 
+    // simply zero the buffer and return if we are not using bt
+    if(state.source_mode != SOURCE_BT) {
+        memset(data, 0, sizeof(Frame) * frameCount);
+        return;
+    };
+
     // >>> MULTS
     // ------------------------
     const float volume_mult = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f);

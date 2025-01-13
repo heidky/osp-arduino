@@ -1,20 +1,26 @@
 #include "BTOutput.h"
 #include "Arduino.h"
 
-// void BTOutput::begin() {}
-// void BTOutput::end() {}
 
+bool BTOutput::begin() {
+    return true;
+}
 
-size_t BTOutput::write(const uint8_t *data, size_t len) {
+void BTOutput::end() {}
+
+size_t BTOutput::write(const uint8_t *data, size_t len) {   
+    router->write_data_bt((Frame*) data, len / sizeof(Frame));
     return len;
 }
 
 void BTOutput::set_sample_rate(int rate) {
     Serial.print("sample rate: ");
     Serial.println(rate);
+    samplerate = rate;
 }
 
 void BTOutput::set_output_active(bool active) {
     Serial.print("output active: ");
     Serial.println(active);
+    active = active;
 }
