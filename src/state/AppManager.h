@@ -134,10 +134,6 @@ public:
     void set_vibe_level(int level, bool activate=false);
     void set_remote_score(int score);
 
-    void force_display_update() {
-        updated = true;
-    }
-
     void action(Action a, void* payload = NULL);
 
 protected:
