@@ -70,6 +70,14 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
     for (int i=0; i<frameCount; i++){
         int32_t pcm_l = data[i].channel1;
         int32_t pcm_r = data[i].channel2;
+
+        if(i%10 == 0) { // only sample_rate/100 as sample rate
+            const float norm_abs_l = (float)abs(pcm_l) / (float)INT16_MAX * SQRT2;
+            meter_l.smooth_update(norm_abs_l);
+
+            const float norm_abs_r = (float)abs(pcm_r) / (float)INT16_MAX * SQRT2;
+            meter_r.smooth_update(norm_abs_r);
+        }
         
         // >>> BT MODE: am, tens
         // ------------------------

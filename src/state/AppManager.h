@@ -97,11 +97,18 @@ struct State {
 #define VIBE_LEVEL_MAX 20
 
 
+struct UiState {
+    float r_level;
+    float l_level;
+};
+
+
 class AppManager {
 public:
     bool updated = false;
 
     State state;
+    UiState ui_state;
 
     void set_page(Page p);
     void set_l_factor(int16_t factor);
@@ -125,9 +132,11 @@ public:
 
     void set_ble_connected(bool connected);
     void set_vibe_level(int level, bool activate=false);
-
-
     void set_remote_score(int score);
+
+    void force_display_update() {
+        updated = true;
+    }
 
     void action(Action a, void* payload = NULL);
 

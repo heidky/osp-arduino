@@ -43,7 +43,7 @@ void TaskCode_display(void *) {
     for(;;) {
         if(manager.updated) {
             manager.updated = false;
-            display.update(manager.state);
+            display.update(manager.state, manager.ui_state);
         }
 
         yield();
@@ -149,6 +149,7 @@ void setup() {
     manager.updated = true;
 }   
 
+long loop_count = 0;
 
 void loop() {
     int l_value = l_encoder.read();
@@ -180,6 +181,14 @@ void loop() {
 
         m_millis = millis();
     }
+
+
+    if(loop_count % 10 == 0) {
+        manager.ui_state.l_level = audio_processor.meter_l.value;
+        manager.ui_state.r_level = audio_processor.meter_r.value;
+        manager.force_display_update();
+    }
+    loop_count++;
 
     delay(1);
     yield();

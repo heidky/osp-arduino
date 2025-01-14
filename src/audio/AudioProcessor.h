@@ -29,4 +29,7 @@ public:
         // Serial.print("volume set: ");
         // Serial.println(volume);
     }
+
+    ExpAvg meter_l = ExpAvg(0.01f);
+    ExpAvg meter_r = ExpAvg(0.01f);
 };

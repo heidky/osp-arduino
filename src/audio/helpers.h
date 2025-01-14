@@ -31,11 +31,20 @@ inline float tens(uint32_t time, int period_samples, int high_samples) {
 
 
 struct Mult {
-public:
     float value = 0.f;
 
     Mult();
     void smooth_update(float target, float step);
     void smooth_increase(float target, float step);
     void linear_update(float target, float step, float max = 1.f);
+};
+
+struct ExpAvg {
+    float value = 0.f;
+    float alpha;
+
+    ExpAvg(float alpha): alpha(alpha) {}
+    inline void smooth_update(float new_value) {
+        this->value = new_value * alpha + this->value * (1.f-alpha); 
+    }
 };
