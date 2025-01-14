@@ -149,7 +149,7 @@ void setup() {
     manager.updated = true;
 }   
 
-long loop_count = 0;
+uint32_t loop_count = 0;
 
 void loop() {
     int l_value = l_encoder.read();
@@ -188,8 +188,8 @@ void loop() {
         manager.ui_state.r_level = audio_processor.meter_r.value;
         manager.force_display_update();
     }
-    loop_count++;
 
+    loop_count++;
     delay(1);
     yield();
 }
