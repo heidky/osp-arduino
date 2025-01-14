@@ -16,7 +16,6 @@
 // #include <esp_log.h>
 // #define INTERNAL_DAC
 
-volatile bool display_updated = false;  // TODO: use task notifications
 Display_ssd1306 display;
 BluetoothA2DPSink a2dp_sink;
 // BluetoothA2DPSinkQueued a2dp_sink;
