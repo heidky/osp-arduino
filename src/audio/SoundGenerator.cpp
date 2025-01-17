@@ -4,8 +4,8 @@
 
 #define SOUND_GEN_TAG "SOUND_GEN"
 
-#define SOUND_GEN_BUFF_SAMPLES (512)
-Frame buffer[SOUND_GEN_BUFF_SAMPLES];
+#define SOUND_GEN_BUFF_SAMPLES (128)
+Frame buffer[SOUND_GEN_BUFF_SAMPLES*2];
 
 void task_handler(void *arg) {   
     SoundGenerator *generator = (SoundGenerator*)arg;
@@ -26,21 +26,30 @@ void SoundGenerator::start() {
     else                    ESP_LOGI(SOUND_GEN_TAG, "SoundGenerator Started");
 }
 
+Frame *SoundGenerator::receive_chunk(size_t *frame_count)
+{
+    generate_chunk(buffer, chunk_samples);
+    *frame_count = chunk_samples;
+    return buffer;
+}
+
 void SoundGenerator::task_code() {
     for (;;) {
-        State state = manager->state;
+        // State state = manager->state;
         
-        if(state.source_mode == SOURCE_GEN) {
-            generate_chunk(buffer, chunk_samples);
-            router->write_data_gen(buffer, chunk_samples);
-        } 
-        else {
-            if(!is_buffer_cleared) clear_buffer();
-        }
+        // if(state.source_mode == SOURCE_GEN) {
+        //     generate_chunk(buffer, chunk_samples);
+        //     router->write_data_gen(buffer, chunk_samples);
+        // } 
+        // else {
+        //     if(!is_buffer_cleared) clear_buffer();
+        // }
 
         delay(5);
     }
 }
+
+
 
 void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
 {   

@@ -35,6 +35,15 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {
         return;
     };
 
+    const float vm = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f) * 0.4f;
+
+    for (uint16_t i=0; i<frameCount; i++){
+        data[i].channel1 *= vm;
+        data[i].channel2 *= vm;
+    }
+    
+    return;
+
     // >>> MULTS
     // ------------------------
     const float volume_mult = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f);

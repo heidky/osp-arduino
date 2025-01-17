@@ -1,7 +1,6 @@
 #pragma once
 #include "state/AppManager.h"
 #include <A2DPVolumeControl.h>
-#include "audio/I2SRouter.h"
 
 
 class SoundGenerator {
@@ -11,7 +10,8 @@ public:
     SoundGenerator(AppManager *manager);
     void start();
 
-    I2SRouter *router = nullptr;
+
+    Frame *receive_chunk(size_t *frame_count);
 
 protected:
     AppManager *manager;

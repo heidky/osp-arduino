@@ -116,13 +116,13 @@ void setup() {
     // a2dp_sink.set_pin_config(i2s_pin_config);
 
     router.set_pin_config(i2s_pin_config);
-    generator.router = &router;
     bt_output.router = &router;
 
     router_update_output();
     router.begin();
 
-    generator.start();
+    // generator.start();
+    router.generator = &generator;
 
 #ifdef INTERNAL_DAC
     static const i2s_config_t i2s_config = {
