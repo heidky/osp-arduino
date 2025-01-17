@@ -118,8 +118,8 @@ void setup() {
     router.set_pin_config(i2s_pin_config);
     bt_output.router = &router;
 
-    router_update_output();
     router.begin();
+    router_update_output();
 
     // generator.start();
     router.generator = &generator;

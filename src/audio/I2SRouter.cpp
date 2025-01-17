@@ -8,6 +8,13 @@ void i2s_task_handler_(void *arg) {
     router->i2s_task_handler();
 }
 
+#define I2SR_TAG "I2S_ROUTER"
+
+void i2s_task_handler_(void *arg) {   
+    I2SRouter *router = (I2SRouter*)arg;
+    router->i2s_task_handler();
+}
+
 I2SRouter::I2SRouter() {
     // default i2s port is 0
     i2s_port = (i2s_port_t)0;
@@ -20,7 +27,7 @@ I2SRouter::I2SRouter() {
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
         .communication_format = (i2s_comm_format_t)I2S_COMM_FORMAT_STAND_I2S,
         .intr_alloc_flags = 0,  // default interrupt priority
-        .dma_buf_count = 3,
+        .dma_buf_count = 2,
         .dma_buf_len = 128,
         .use_apll = false,
         .tx_desc_auto_clear = true,  // avoiding noise in case of data unavailability
@@ -60,7 +67,7 @@ bool I2SRouter::begin() {
         rc = false;
     }
 
-    const BaseType_t priority = 3;
+    const BaseType_t priority = 5;
     const BaseType_t core = 1;
     const uint32_t stack_size = 2048;
 
@@ -81,19 +88,32 @@ uint32_t I2SRouter::write_data_bt(Frame *data, uint32_t frame_count) {
         return frame_count;
     }
 
+    // static long last_call_millis = -9999;
+    // long now_millis = millis();
+    // if(last_call_millis > 0) Serial.println(now_millis - last_call_millis);
+    // last_call_millis = now_millis;
+
+    if(ringbuf_state == RingbufState::Dropping) {
+        return 0;
+    }
+
     uint32_t written_frames = 0;
     const uint32_t FRAMES_PER_CHUNK = 128;
+    const size_t write_timeout_ms = 6;
 
     while(written_frames < frame_count) {
         const Frame *data_to_write = (data + written_frames);
         const uint32_t remaining_frames = frame_count - written_frames;
         const uint32_t frames_to_write = remaining_frames > FRAMES_PER_CHUNK ? FRAMES_PER_CHUNK : remaining_frames;
 
-        const BaseType_t res = xRingbufferSend(ringbuf_handle, (void*)data_to_write, frames_to_write * sizeof(Frame), 0);
+        if(frames_to_write != FRAMES_PER_CHUNK) ESP_LOGE(BT_AV_TAG, "bad chunk size");
+
+        const BaseType_t res = xRingbufferSend(ringbuf_handle, (void*)data_to_write, frames_to_write * sizeof(Frame), pdMS_TO_TICKS(write_timeout_ms));
         if(res == pdTRUE) {
             written_frames += frames_to_write;
         } else {
             Serial.println("ringbuffer full. enter dropping");
+            ringbuf_state = RingbufState::Dropping;
             return written_frames;
         }
     }
@@ -106,7 +126,13 @@ uint32_t I2SRouter::write_data_bt(Frame *data, uint32_t frame_count) {
 
     // size_t item_size = frame_count * sizeof(Frame);
     // size_t i2s_bytes_written = 0;
+    // size_t item_size = frame_count * sizeof(Frame);
+    // size_t i2s_bytes_written = 0;
 
+    // if (i2s_write(i2s_port, (void *)data, item_size, &i2s_bytes_written, portMAX_DELAY) != ESP_OK) {
+    //     ESP_LOGE(BT_AV_TAG, "i2s_write has failed");
+    // }
+    // return i2s_bytes_written / sizeof(Frame);
     // if (i2s_write(i2s_port, (void *)data, item_size, &i2s_bytes_written, portMAX_DELAY) != ESP_OK) {
     //     ESP_LOGE(BT_AV_TAG, "i2s_write has failed");
     // }
@@ -114,6 +140,9 @@ uint32_t I2SRouter::write_data_bt(Frame *data, uint32_t frame_count) {
 }
 
 uint32_t I2SRouter::write_data_gen(Frame *data, uint32_t frame_count) {
+    Serial.println("Why here?");
+    // if(selected_output != OutputChoice::Gen) return frame_count;
+    // if(--gen_skip_packets > 0) return frame_count;
     Serial.println("Why here?");
     // if(selected_output != OutputChoice::Gen) return frame_count;
     // if(--gen_skip_packets > 0) return frame_count;
@@ -137,31 +166,51 @@ void I2SRouter::set_selected_output(OutputChoice new_output) {
         clear_ringbuf();
         ringbuf_state = RingbufState::Preloading; 
         this->selected_output = new_output;
+        Serial.println("switched routed output to Bt");
     }
     else if(new_output == OutputChoice::Gen) {
         // gen_skip_packets = 16;
+        this->selected_output = new_output;
+        clear_ringbuf();
+        Serial.println("switching routed output to Gen");
     }
-
-    
-    Serial.println("switching routed output");
 }
 
 void I2SRouter::i2s_task_handler() {
 
-    const size_t RINGBUF_PRELOAD_PERC = 50;
+    static const size_t RINGBUF_PRELOAD_PERC = 50;
+    static const size_t RINGBUF_PRELOAD_ITEMS = 10;
+    static const BaseType_t READ_TIMEOUT_MS = 5;
 
     for (;;) 
     {    
         if(selected_output == OutputChoice::Bt) 
         {
             if (ringbuf_state == RingbufState::Preloading) {
-                if(ringbuf_fill_perc() > RINGBUF_PRELOAD_PERC) 
+                // if(ringbuf_fill_perc() > RINGBUF_PRELOAD_PERC) {
+                if(ringbuf_items_waiting() >= RINGBUF_PRELOAD_ITEMS) {
                     ringbuf_state = RingbufState::Processing; 
+                    // Serial.print("into processing: ");
+                    // Serial.println(ringbuf_fill_perc());
+                }
+            }
+            else if (ringbuf_state == RingbufState::Dropping) {
+                size_t item_size, fill_perc = 0;
+
+                // while((fill_perc = ringbuf_fill_perc()) > RINGBUF_PRELOAD_PERC) {
+                while(ringbuf_items_waiting() > RINGBUF_PRELOAD_ITEMS) {
+                    void *item = xRingbufferReceive(ringbuf_handle, &item_size, 0);
+                    vRingbufferReturnItem(ringbuf_handle, item);
+                }
+
+                Serial.print("dropped under water level: ");
+                Serial.println(fill_perc);
+                ringbuf_state = RingbufState::Preloading;
             }
 
             if (ringbuf_state == RingbufState::Processing) {
                 size_t item_size = 0;
-                void *item = xRingbufferReceive(ringbuf_handle, &item_size, 0);
+                void *item = xRingbufferReceive(ringbuf_handle, &item_size, pdMS_TO_TICKS(READ_TIMEOUT_MS));
 
                 if(item != NULL && item_size > 0) {
                     size_t bytes_written;
@@ -170,6 +219,7 @@ void I2SRouter::i2s_task_handler() {
                 }
                 else {
                     Serial.println("data starvation!");
+                    // Serial.println(ringbuf_fill_perc());
                     ringbuf_state = RingbufState::Preloading;
                 }
             }
@@ -179,12 +229,14 @@ void I2SRouter::i2s_task_handler() {
         }
         else if (selected_output == OutputChoice::Gen) 
         {
-            size_t frame_count = 0;
-            void *data = generator->receive_chunk(&frame_count);
+            const size_t chunk_size = 128;
+            const void *data = generator->receive_chunk(chunk_size);
 
-            size_t bytes_written = 0;
-            const size_t size = frame_count * sizeof(Frame);
-            i2s_write(i2s_port, data, size, &bytes_written, portMAX_DELAY);
+            if(data != NULL) {
+                size_t bytes_written = 0;
+                const size_t size = chunk_size * sizeof(Frame);
+                i2s_write(i2s_port, data, size, &bytes_written, portMAX_DELAY);
+            }
         }
 
         delay(1);

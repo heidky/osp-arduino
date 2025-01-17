@@ -11,12 +11,12 @@ public:
     void start();
 
 
-    Frame *receive_chunk(size_t *frame_count);
+    Frame *receive_chunk(size_t frame_count);
 
 protected:
     AppManager *manager;
     TaskHandle_t task_handle;
-    uint32_t chunk_samples = 512;
+    uint32_t chunk_samples = 128;
     float sample_rate = 44100.f;
 
     uint32_t time = 0;
