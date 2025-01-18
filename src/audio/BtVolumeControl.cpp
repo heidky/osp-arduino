@@ -1,4 +1,4 @@
-#include "AudioProcessor.h"
+#include "BtVolumeControl.h"
 #include "math.h"
 #include "helpers.h"
 #include "config.h"
@@ -14,7 +14,7 @@
 // ==================================
 // ======== AUDIO PROCESSOR =========
 // ==================================
-AudioProcessor::AudioProcessor(AppManager* manager) {
+BtVolumeControl::BtVolumeControl(AppManager* manager) {
     this->manager = manager;
     volumeFactorMax = 128;
     volumeFactor = 128;
@@ -24,7 +24,7 @@ AudioProcessor::AudioProcessor(AppManager* manager) {
     // remote_mult.value = 1.f;
 }
 
-void AudioProcessor::update_audio_data(Frame* data, uint16_t frame_count) {
+void BtVolumeControl::update_audio_data(Frame* data, uint16_t frame_count) {
     if (data == nullptr || frame_count == 0) return;
     State state = manager->state;
 
@@ -41,7 +41,7 @@ void AudioProcessor::update_audio_data(Frame* data, uint16_t frame_count) {
         meter_r.smooth_update(norm_abs_r);
 
         // SCALE BY VOLUME
-        const float volume_target = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f) * 0.4f;
+        const float volume_target = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f);
         const float volume_step = 1.f / LR_RISETIME / 44100 / 4;
 
         for (uint16_t i = 0; i < frame_count; i++) {

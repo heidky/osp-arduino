@@ -132,8 +132,8 @@ void I2SRouter::set_selected_output(OutputChoice new_output) {
     }
 }
 
-void I2SRouter::i2s_task_handler() {
-
+void I2SRouter::i2s_task_handler() 
+{
     static const size_t RINGBUF_PRELOAD_ITEMS = 10;
     static const BaseType_t READ_TIMEOUT_MS = 5;
 
@@ -204,5 +204,16 @@ void I2SRouter::i2s_task_handler() {
         }
 
         delay(1);
+    }
+}
+
+void I2SRouter::set_sample_rate(uint32_t sample_rate) {
+    ESP_LOGI(BT_AV_TAG, "%s %d", __func__, sample_rate);
+    i2s_config.sample_rate = sample_rate;
+    
+    if (i2s_set_sample_rates(i2s_port, i2s_config.sample_rate) != ESP_OK) {
+        ESP_LOGE(BT_AV_TAG, "i2s_set_clk failed with samplerate=%d", i2s_config.sample_rate);
+    } else {
+        ESP_LOGI(BT_AV_TAG, "audio player configured, samplerate=%d", i2s_config.sample_rate);
     }
 }

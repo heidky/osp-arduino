@@ -46,10 +46,14 @@ Frame *SoundGenerator::receive_chunk(size_t frame_count)
 
 void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
 {   
+    static const float TRACK_NORM = 0.707f; // -3db (fs)
+
+    const float freq = 440.f;
+
     for(uint32_t i = 0; i < frame_count; i++) {
         const float t = (float)time / sample_rate;
-        data[i].channel1 = (0.1 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
-        data[i].channel2 = (0.1 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
+        data[i].channel1 = (TRACK_NORM * sin_fast(freq * t)) * (INT16_MAX - 1);
+        data[i].channel2 = (TRACK_NORM * sin_fast(freq * t)) * (INT16_MAX - 1);
         time++;
     }
 

@@ -5,7 +5,7 @@
 #include "helpers.h"
 
 
-class AudioProcessor : public A2DPVolumeControl {
+class BtVolumeControl : public A2DPVolumeControl {
 public:
     AppManager *manager;
 
@@ -21,7 +21,7 @@ public:
     // Mult remote_mult;
     Mult volume_mult;
 
-    AudioProcessor(AppManager* manager);
+    BtVolumeControl(AppManager* manager);
 
     virtual void update_audio_data(Frame* data, uint16_t frameCount);
 

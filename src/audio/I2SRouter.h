@@ -74,4 +74,6 @@ protected:
 
     CommonProcessing common_processing;
     BtProcessing bt_processing;
+
+    void set_sample_rate(uint32_t sample_rate);
 };

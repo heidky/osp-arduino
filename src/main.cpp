@@ -9,29 +9,32 @@
 #include "state/AppManager.h"
 #include "input/RotaryEncoder.h"
 #include "input/Button.h"
-#include "audio/AudioProcessor.h"
+#include "audio/BtVolumeControl.h"
 #include "audio/BTOutput.h"
 #include "ble/BLEManager.h"
 #include "audio/SoundGenerator.h"
+// #include <esp_log.h>
 
 // #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-// #include <esp_log.h>
-// #define INTERNAL_DAC
 
+AppManager manager;
+
+// DISPLAY
 Display_ssd1306 display;
 TaskHandle_t Task_display;
 
-AppManager manager;
-AudioProcessor audio_processor(&manager);
-BLEManager ble(&manager);
-
+// OUTPUT
 I2SRouter router;
 SoundGenerator generator(&manager);
 
+// BT
 BTOutput bt_output;
 BluetoothA2DPSink a2dp_sink;
+BtVolumeControl bt_volume_control(&manager);
 // BluetoothA2DPSinkQueued a2dp_sink;
+BLEManager ble(&manager);
 
+// INPUTS
 RotaryEncoder l_encoder(GPIO_ROTARY_L_CLK, GPIO_ROTARY_L_DT);
 Button l_button(GPIO_ROTARY_L_SW);
 RotaryEncoder r_encoder(GPIO_ROTARY_R_CLK, GPIO_ROTARY_R_DT);
@@ -84,17 +87,8 @@ void setup() {
 
     // show splashscreen
     display.splash();
-
     // create display refresh task
-    xTaskCreatePinnedToCore(
-        TaskCode_display,
-        "Task_Display", 
-        10000, 
-        NULL, 
-        0,
-        &Task_display,
-        0
-    );
+    xTaskCreatePinnedToCore(TaskCode_display, "Task_Display", 2048, NULL, 0, &Task_display, 0);
 
     // BT INIT
     a2dp_sink.set_output(bt_output);
@@ -116,7 +110,7 @@ void setup() {
     router.begin();
     router_update_output();
 
-    a2dp_sink.set_volume_control(&audio_processor);
+    a2dp_sink.set_volume_control(&bt_volume_control);
     a2dp_sink.set_on_connection_state_changed(&bt_state_changed);
     a2dp_sink.set_volume(0);
     a2dp_sink.set_default_bt_mode(ESP_BT_MODE_BTDM);  // allows for BLE
@@ -130,7 +124,7 @@ void setup() {
 
 void loop() {
     static uint32_t loop_count = 0;
-    static long m_millis = -9999;
+    static long m_millis = -10000;
 
     int l_value = l_encoder.read();
     int r_value = r_encoder.read();
@@ -155,17 +149,17 @@ void loop() {
         if(millis() - m_millis >= BTN_DOUBLE_PRESS_MILLIS) {
             manager.action(Action::PressM);
             router_update_output(); // only does stuff if needed
+            m_millis = millis();
         }
         else {
             manager.action(Action::DoublePressM);
+            m_millis = -10000;
         }
-
-        m_millis = millis();
     }
 
     if(loop_count % 10 == 0) {
-        manager.ui_state.l_level = audio_processor.meter_l.value;
-        manager.ui_state.r_level = audio_processor.meter_r.value;
+        manager.ui_state.l_level = bt_volume_control.meter_l.value;
+        manager.ui_state.r_level = bt_volume_control.meter_r.value;
         manager.updated = true;
     }
 
