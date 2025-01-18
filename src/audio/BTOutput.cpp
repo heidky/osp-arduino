@@ -9,7 +9,7 @@ bool BTOutput::begin() {
 void BTOutput::end() {}
 
 size_t BTOutput::write(const uint8_t *data, size_t len) {   
-    router->write_data_bt((Frame*) data, len / sizeof(Frame));
+    router->on_bt_data((Frame*) data, len / sizeof(Frame));
     return len;
 }
 

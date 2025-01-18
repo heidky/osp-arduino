@@ -2,8 +2,8 @@
 #include <BluetoothA2DPOutput.h>
 #include <freertos/ringbuf.h>
 #include "audio/SoundGenerator.h"
-#include <freertos/ringbuf.h>
-#include "audio/SoundGenerator.h"
+#include "audio/processing/CommonProcessing.h"
+#include "audio/processing/BtProcessing.h"
 
 enum class OutputChoice {
     None,
@@ -24,8 +24,10 @@ public:
     bool begin();
     void end(); 
 
-    uint32_t write_data_bt(Frame *data, uint32_t frame_count);
-    SoundGenerator *generator = NULL;
+    AppManager *manager = nullptr;
+
+    SoundGenerator *generator = nullptr;
+    size_t on_bt_data(Frame *data, size_t frame_count);
 
     void set_pin_config(i2s_pin_config_t pin_config)    { this->pin_config = pin_config; }
     void set_i2s_port(i2s_port_t i2s_num)               { i2s_port = i2s_num; }
@@ -69,4 +71,7 @@ protected:
             vRingbufferReturnItem(ringbuf_handle, data);
         }
     }
+
+    CommonProcessing common_processing;
+    BtProcessing bt_processing;
 };

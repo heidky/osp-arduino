@@ -74,7 +74,7 @@ bool I2SRouter::begin() {
 void I2SRouter::end() {// TODO 
 }
 
-uint32_t I2SRouter::write_data_bt(Frame *data, uint32_t frame_count) {
+size_t I2SRouter::on_bt_data(Frame *data, size_t frame_count) {
     if(selected_output != OutputChoice::Bt) {
         return frame_count;
     }
@@ -137,7 +137,9 @@ void I2SRouter::i2s_task_handler() {
     static const BaseType_t READ_TIMEOUT_MS = 5;
 
     for (;;) 
-    {    
+    {   
+        State state = manager->state;
+
         if(selected_output == OutputChoice::Bt) 
         {
             if (ringbuf_state == RingbufState::Preloading) {
@@ -162,6 +164,10 @@ void I2SRouter::i2s_task_handler() {
                 void *item = xRingbufferReceive(ringbuf_handle, &item_size, pdMS_TO_TICKS(READ_TIMEOUT_MS));
 
                 if(item != NULL && item_size > 0) {
+                    const size_t frame_size = item_size/sizeof(Frame);
+                    bt_processing.process(state, (Frame*)item, frame_size, 44100);
+                    common_processing.process(state, (Frame*)item, frame_size, 44100);
+
                     size_t bytes_written;
                     if(i2s_write(i2s_port, item, item_size, &bytes_written, portMAX_DELAY) != ESP_OK) {
                         ESP_LOGE(I2SR_TAG, "i2s write failed");
@@ -179,12 +185,15 @@ void I2SRouter::i2s_task_handler() {
         }
         else if (selected_output == OutputChoice::Gen) 
         {
-            const size_t chunk_size = 128;
-            const void *data = generator->receive_chunk(chunk_size);
+            static const size_t GEN_CHUNK_FRAMES = 128;
+
+            const void *data = generator->receive_chunk(GEN_CHUNK_FRAMES);
 
             if(data != NULL) {
+                common_processing.process(state, (Frame*)data, GEN_CHUNK_FRAMES, 44100);
+
                 size_t bytes_written = 0;
-                const size_t size = chunk_size * sizeof(Frame);
+                const size_t size = GEN_CHUNK_FRAMES * sizeof(Frame);
                 if(i2s_write(i2s_port, data, size, &bytes_written, portMAX_DELAY) != ESP_OK) {
                     ESP_LOGE(I2SR_TAG, "i2s write failed");
                 }

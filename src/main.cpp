@@ -113,6 +113,7 @@ void setup() {
     };
 
     router.set_pin_config(i2s_pin_config);
+    router.manager = &manager;
     bt_output.router = &router;
 
     generator.begin();
