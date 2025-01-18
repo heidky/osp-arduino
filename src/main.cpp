@@ -35,7 +35,6 @@ BLEManager ble(&manager);
 SoundGenerator generator(&manager);
 I2SRouter router;
 
-
 RotaryEncoder l_encoder(GPIO_ROTARY_L_CLK, GPIO_ROTARY_L_DT);
 Button l_button(GPIO_ROTARY_L_SW);
 RotaryEncoder r_encoder(GPIO_ROTARY_R_CLK, GPIO_ROTARY_R_DT);
@@ -72,7 +71,6 @@ void router_update_output() {
     const OutputChoice output = manager.state.source_mode == SOURCE_BT ? OutputChoice::Bt : OutputChoice::Gen;
     router.set_selected_output(output);
 }
-
 
 
 void setup() {
@@ -113,32 +111,15 @@ void setup() {
         .data_out_num = GPIO_I2S_DOUT,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
-    // a2dp_sink.set_pin_config(i2s_pin_config);
 
     router.set_pin_config(i2s_pin_config);
     bt_output.router = &router;
 
-    router.begin();
-    router_update_output();
-
-    // generator.start();
+    generator.begin();
     router.generator = &generator;
 
-#ifdef INTERNAL_DAC
-    static const i2s_config_t i2s_config = {
-        .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN),
-        .sample_rate = 44100, // corrected by info from bluetooth
-        .bits_per_sample = (i2s_bits_per_sample_t) 16, /* the DAC module will only take the 8bits from MSB */
-        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-        .communication_format = (i2s_comm_format_t)I2S_COMM_FORMAT_I2S,
-        .intr_alloc_flags = 0, // default interrupt priority
-        .dma_buf_count = 8,
-        .dma_buf_len = 64,
-        .use_apll = false,
-        // .tx_desc_auto_clear = false,
-    };
-    a2dp_sink.set_i2s_config(i2s_config);
-#endif
+    router.begin();
+    router_update_output();
 
     a2dp_sink.set_volume_control(&audio_processor);
     a2dp_sink.set_on_connection_state_changed(&bt_state_changed);

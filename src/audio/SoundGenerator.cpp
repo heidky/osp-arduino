@@ -4,32 +4,39 @@
 
 #define SOUND_GEN_TAG "SOUND_GEN"
 
-#define SOUND_GEN_BUFF_SAMPLES (128)
-Frame buffer[SOUND_GEN_BUFF_SAMPLES*2];
+SoundGenerator::SoundGenerator(AppManager *manager) : manager(manager) {}
 
-void task_handler(void *arg) {   
-    SoundGenerator *generator = (SoundGenerator*)arg;
-    generator->task_code();
+bool SoundGenerator::begin()
+{
+    if(buffer != NULL) {
+        ESP_LOGE(SOUND_GEN_TAG, "double SoundGenerator begin()");
+        return false;
+    }
+
+    buffer = (Frame*)calloc(buffer_frame_count, sizeof(Frame));
+
+    if(buffer == NULL) {
+        ESP_LOGE(SOUND_GEN_TAG, "cannot initialize SoundGenerator buffer. out of memory (likely)");
+        return false;
+    }
+
+    return true;
 }
 
-SoundGenerator::SoundGenerator(AppManager *manager) : manager(manager) {
-    chunk_samples = SOUND_GEN_BUFF_SAMPLES;
-}
-
-void SoundGenerator::start() {
-    // const BaseType_t priority = 3;
-    // const BaseType_t core = 1;
-    // const uint32_t stack = 2048;
-
-    // BaseType_t result = xTaskCreatePinnedToCore(task_handler, "SoundGenTask", stack, (void*)this, priority, &task_handle, core);
-    // if (result != pdPASS)   ESP_LOGE(SOUND_GEN_TAG, "xTaskCreatePinnedToCore");
-    // else                    ESP_LOGI(SOUND_GEN_TAG, "SoundGenerator Started");
+void SoundGenerator::end()
+{
+    if(buffer != NULL) {
+        free(buffer);
+    }
+    else {
+        ESP_LOGE(SOUND_GEN_TAG, "SoundGenerator cannot end(). buffer is NULL");
+    }
 }
 
 Frame *SoundGenerator::receive_chunk(size_t frame_count)
 {
-    if (frame_count > SOUND_GEN_BUFF_SAMPLES) {
-        ESP_LOGE(SOUND_GEN_TAG, "xTaskCreatePinnedToCore");
+    if (frame_count > buffer_frame_count) {
+        ESP_LOGE(SOUND_GEN_TAG, "chunk is too big. cannot generate");
         return NULL;
     }
 
@@ -37,37 +44,12 @@ Frame *SoundGenerator::receive_chunk(size_t frame_count)
     return buffer;
 }
 
-Frame *SoundGenerator::receive_chunk(size_t *frame_count)
-{
-    generate_chunk(buffer, chunk_samples);
-    *frame_count = chunk_samples;
-    return buffer;
-}
-
-void SoundGenerator::task_code() {
-    for (;;) {
-        // State state = manager->state;
-        
-        // if(state.source_mode == SOURCE_GEN) {
-        //     generate_chunk(buffer, chunk_samples);
-        //     router->write_data_gen(buffer, chunk_samples);
-        // } 
-        // else {
-        //     if(!is_buffer_cleared) clear_buffer();
-        // }
-
-        delay(5);
-    }
-}
-
-
-
 void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
 {   
     for(uint32_t i = 0; i < frame_count; i++) {
         const float t = (float)time / sample_rate;
-        data[i].channel1 = (0.4 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
-        data[i].channel2 = (0.4 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
+        data[i].channel1 = (0.1 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
+        data[i].channel2 = (0.1 * sin_fast(1000.f * t)) * (INT16_MAX - 1);
         time++;
     }
 
@@ -75,6 +57,6 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
 }
 
 void SoundGenerator::clear_buffer() {
-    memset(buffer, 0, sizeof(Frame) * SOUND_GEN_BUFF_SAMPLES);
+    memset(buffer, 0, sizeof(Frame) * buffer_frame_count);
     is_buffer_cleared = true;
 }
