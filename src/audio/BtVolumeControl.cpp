@@ -4,32 +4,18 @@
 #include "config.h"
 #include "ble/BLEManager.h"
 
-// #define DEBUG_PLOT_PROCESS_TIME
-// #define DEBUG_PLOT_MULTS
 
-// using ShapeFunction = float (*)(float);
-// ShapeFunction shape_functions[] = {sin_fast, saw, tri, square};
-
-
-// ==================================
-// ======== AUDIO PROCESSOR =========
-// ==================================
-BtVolumeControl::BtVolumeControl(AppManager* manager) {
-    this->manager = manager;
+BtVolumeControl::BtVolumeControl() {
     volumeFactorMax = 128;
     volumeFactor = 128;
     is_volume_used = true;
-
-    // vibe_mult.value = 1.f;
-    // remote_mult.value = 1.f;
 }
 
 void BtVolumeControl::update_audio_data(Frame* data, uint16_t frame_count) {
     if (data == nullptr || frame_count == 0) return;
-    State state = manager->state;
 
     // simply zero the buffer and return if we are not using bt
-    if(state.source_mode != SOURCE_BT) {  //TODO: use a volatile variable 'muted'
+    if(muted) {
         memset(data, 0, sizeof(Frame) * frame_count);
     }
     else {
@@ -52,6 +38,17 @@ void BtVolumeControl::update_audio_data(Frame* data, uint16_t frame_count) {
         }
     }
 }
+
+
+// #define DEBUG_PLOT_PROCESS_TIME
+// #define DEBUG_PLOT_MULTS
+
+// using ShapeFunction = float (*)(float);
+// ShapeFunction shape_functions[] = {sin_fast, 
+
+// ==================================
+// ======== AUDIO PROCESSOR =========
+// ==================================
 
 
 // void AudioProcessor::update_audio_data(Frame* data, uint16_t frameCount) {

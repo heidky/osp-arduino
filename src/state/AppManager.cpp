@@ -1,6 +1,29 @@
 #include "AppManager.h"
 
+#define TAG_AM "APP_MANAGER"
+
+AppManager::AppManager() {
+    state_mutex = xSemaphoreCreateMutex();
+}
+
+bool AppManager::copy_state_into(State &out_state) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
+        out_state = this->state;
+        xSemaphoreGive(state_mutex);
+        return true;
+    }
+    else {
+        ESP_LOGE(TAG_AM, "cannot copy app state safely");
+        return false;
+    }
+}
+
 void AppManager::action(Action a, void* payload) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) != pdTRUE) {
+        ESP_LOGE(TAG_AM, "cannot perform action due state_mutex take failure.");
+        return;
+    };
+
     switch (state.page)
     {
     case Page::Main:
@@ -32,7 +55,10 @@ void AppManager::action(Action a, void* payload) {
         page_Settings_Ramp(a, payload);
         break;
     }
+
+    xSemaphoreGive(state_mutex);
 }
+
 
 void AppManager::page_Main(Action a, void* payload) {
     switch (a) 
@@ -307,7 +333,6 @@ void AppManager::page_Settings_Ramp(Action a, void* payload) {
 }
 
 
-
 // ==================
 // SETTERS
 // ==================
@@ -359,6 +384,16 @@ void AppManager::set_bt_connected(bool connected) {
     if(state.bt_connected != connected) {
         state.bt_connected = connected;
         updated = true;
+    }
+}
+
+void AppManager::set_bt_connected_(bool connected) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
+        set_bt_connected(connected);
+        xSemaphoreGive(state_mutex);
+    }
+    else {
+        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
     }
 }
 
@@ -500,6 +535,15 @@ void AppManager::set_ble_connected(bool connected) {
     }
 }
 
+void AppManager::set_ble_connected_(bool connected) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
+        set_ble_connected(connected);
+        xSemaphoreGive(state_mutex);
+    }
+    else {
+        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+    }
+}
 
 void AppManager::set_vibe_level(int level, bool activate)
 {
@@ -517,6 +561,16 @@ void AppManager::set_vibe_level(int level, bool activate)
     }
 }
 
+void AppManager::set_vibe_level_(int level, bool activate) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
+        set_vibe_level(level, activate);
+        xSemaphoreGive(state_mutex);
+    }
+    else {
+        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+    }
+}
+
 void AppManager::set_source_mode(int mode)
 {
     if (mode < 0 || mode > NUM_SOURCES) return;
@@ -529,12 +583,21 @@ void AppManager::set_source_mode(int mode)
     }
 }
 
-void AppManager::set_remote_score(int score)
-{   
+void AppManager::set_remote_score(int score) {   
     if(score > 1 || score < -1) return;
 
     if(score != state.remote_score) {
         state.remote_score = score;
         updated = true;
+    }
+}
+
+void AppManager::set_remote_score_(int score) {
+    if(xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
+        set_remote_score(score);
+        xSemaphoreGive(state_mutex);
+    }
+    else {
+        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
     }
 }

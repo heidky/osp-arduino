@@ -30,7 +30,7 @@ SoundGenerator generator(&manager);
 // BT
 BTOutput bt_output;
 BluetoothA2DPSink a2dp_sink;
-BtVolumeControl bt_volume_control(&manager);
+BtVolumeControl bt_volume_control;
 // BluetoothA2DPSinkQueued a2dp_sink;
 BLEManager ble(&manager);
 
@@ -45,7 +45,11 @@ Button m_button(GPIO_BUTTON_M);
 void TaskCode_display(void *) {
     for(;;) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        display.update(manager.state, manager.ui_state);
+
+        State state;
+        if(manager.copy_state_into(state)) {
+            display.update(state, manager.ui_state);
+        }
 
         yield();
         delay(10);
@@ -54,7 +58,7 @@ void TaskCode_display(void *) {
 
 
 void bt_state_changed(esp_a2d_connection_state_t s, void*) {
-    manager.set_bt_connected(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
+    manager.set_bt_connected_(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
 
     // always start with 0 audio
     a2dp_sink.set_volume(0);
@@ -65,8 +69,11 @@ void bt_state_changed(esp_a2d_connection_state_t s, void*) {
 
 
 void router_update_output() {
-    const OutputChoice output = manager.state.source_mode == SOURCE_BT ? OutputChoice::Bt : OutputChoice::Gen;
-    router.set_selected_output(output);
+    State state;
+    if(manager.copy_state_into(state)) {
+        bt_volume_control.set_muted(state.source_mode == SOURCE_BT);
+        router.set_selected_output(state.source_mode == SOURCE_BT ? OutputChoice::Bt : OutputChoice::Gen);
+    }
 }
 
 

@@ -43,11 +43,11 @@ static BLECharacteristic *s_rx_charasteric;
 //Setup callbacks onConnect and onDisconnect
 class MyServerCallbacks: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
-    s_manager->set_ble_connected(true);
+    s_manager->set_ble_connected_(true);
   };
 
   void onDisconnect(BLEServer* pServer) {
-    s_manager->set_ble_connected(false);
+    s_manager->set_ble_connected_(false);
     BLEDevice::startAdvertising();
     Serial.println("LVS BLE advertising!");
   }
@@ -93,16 +93,16 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
 
                 // > UPDATE STATE
                 // Serial.println((int) data);
-                s_manager->set_vibe_level(data, true);
+                s_manager->set_vibe_level_(data, true);
 
                 // > REPLY OK
                 s_rx_charasteric->setValue("Ok;"); // reply full battery
                 s_rx_charasteric->notify();
             }
             else if(extract_cmd_data(PREFIX_REMOTE_BUTTONS, buff, col_ptr, &data)) {
-                if(data == 0) s_manager->set_remote_score(0);
-                else if(data == 10 ) s_manager->set_remote_score(1);
-                else if (data == 1 || data == 11) s_manager->set_remote_score(-1);
+                if(data == 0) s_manager->set_remote_score_(0);
+                else if(data == 10 ) s_manager->set_remote_score_(1);
+                else if (data == 1 || data == 11) s_manager->set_remote_score_(-1);
             } 
         }
     }

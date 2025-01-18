@@ -113,11 +113,16 @@ struct UiState {
 
 class AppManager {
 public:
+    AppManager();
+
     bool updated = false;
 
-    State state;
     UiState ui_state;
 
+    void action(Action a, void* payload = NULL);
+    bool copy_state_into(State &out_state);
+
+protected:
     void set_page(Page p);
     void set_l_factor(int16_t factor);
     void set_r_factor(int16_t factor);
@@ -145,9 +150,16 @@ public:
     void inc_source_cursor(int d);
     void set_source_mode(int mode);
 
-    void action(Action a, void* payload = NULL);
+public:
+    void set_bt_connected_(bool connected);
+    void set_ble_connected_(bool connected);
+    void set_vibe_level_(int level, bool activate=false);
+    void set_remote_score_(int score);
 
 protected:
+    SemaphoreHandle_t state_mutex;
+    State state;
+
     void page_Main(Action a, void* payload);
 
     void page_BtMode_Selection(Action a, void* payload);

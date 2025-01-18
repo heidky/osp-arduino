@@ -137,9 +137,11 @@ void I2SRouter::i2s_task_handler()
     static const size_t RINGBUF_PRELOAD_ITEMS = 10;
     static const BaseType_t READ_TIMEOUT_MS = 5;
 
+    static State state;
+    
     for (;;) 
     {   
-        State state = manager->state;
+        manager->copy_state_into(state);
 
         if(selected_output == OutputChoice::Bt) 
         {
