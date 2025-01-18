@@ -16,4 +16,5 @@ private:
     Mult l_mult;
     Mult r_mult;
     Mult vibe_mult;
+    Mult remote_mult;
 };

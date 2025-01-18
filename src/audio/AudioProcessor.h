@@ -9,16 +9,17 @@ class AudioProcessor : public A2DPVolumeControl {
 public:
     AppManager *manager;
 
-    uint32_t time = 0;
+    // uint32_t time = 0;
 
-    float intensity_l = 0;
-    float intensity_r = 0;
-    float intensity_alpha = 0.001;
+    // float intensity_l = 0;
+    // float intensity_r = 0;
+    // float intensity_alpha = 0.001;
 
-    Mult l_mult;
-    Mult r_mult;
-    Mult vibe_mult;
-    Mult remote_mult;
+    // Mult l_mult;
+    // Mult r_mult;
+    // Mult vibe_mult;
+    // Mult remote_mult;
+    Mult volume_mult;
 
     AudioProcessor(AppManager* manager);
 

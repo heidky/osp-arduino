@@ -1,5 +1,6 @@
 #include "I2SRouter.h"
 #include <Arduino.h>
+#include "log/perf_timer.h"
 
 #define I2SR_TAG "I2S_ROUTER"
 
@@ -164,9 +165,11 @@ void I2SRouter::i2s_task_handler() {
                 void *item = xRingbufferReceive(ringbuf_handle, &item_size, pdMS_TO_TICKS(READ_TIMEOUT_MS));
 
                 if(item != NULL && item_size > 0) {
+                    // START_PERF(processing)
                     const size_t frame_size = item_size/sizeof(Frame);
                     bt_processing.process(state, (Frame*)item, frame_size, 44100);
                     common_processing.process(state, (Frame*)item, frame_size, 44100);
+                    // STOP_PERF(processing, 100)
 
                     size_t bytes_written;
                     if(i2s_write(i2s_port, item, item_size, &bytes_written, portMAX_DELAY) != ESP_OK) {
