@@ -328,6 +328,11 @@ void AppManager::set_l_factor(int16_t factor) {
 
     if(state.l_factor != factor) {
         state.l_factor = factor;
+
+        if(state.r_factor == 0 && state.l_factor == 0) { // both zero means reset
+            if(!state.ble_connected) state.vibe_active = false;
+        }
+
         updated = true;
     }
 }
@@ -341,6 +346,11 @@ void AppManager::set_r_factor(int16_t factor) {
 
     if(state.r_factor != factor) {
         state.r_factor = factor;
+
+        if(state.r_factor == 0 && state.l_factor == 0) { // both zero means reset
+            if(!state.ble_connected) state.vibe_active = false;
+        }
+
         updated = true;
     }
 }
@@ -472,32 +482,34 @@ void AppManager::set_invert_phase(bool i) {
 
 void AppManager::set_ble_connected(bool connected) {
     if(state.ble_connected != connected) {
-        state.ble_connected = connected;
-
+        // on disconnect
         if(!connected) {
-            state.r_factor = 0;
-            state.l_factor = 0;
+            // state.r_factor = 0;
+            // state.l_factor = 0;
+
+            // also zero vibe and remote
+            state.vibe_level = 0;
+            state.remote_score = 0;
+
+            // only disable vibe if no volume is applied
+            if(state.r_factor == 0 && state.l_factor == 0) state.vibe_active = false;
         }
         
+        state.ble_connected = connected;
         updated = true;
     }
 }
 
-void AppManager::set_duck_level(int level)
-{
-    if(level != state.duck_level) {
-        state.duck_level = level;
-        updated = true;
-    }
-}
 
-void AppManager::set_vibe_level(int level)
+void AppManager::set_vibe_level(int level, bool activate)
 {
     if (level < 0) {
         level = 0;
     } else if (level > VIBE_LEVEL_MAX) {
         level = VIBE_LEVEL_MAX;
     }
+
+    if(activate) state.vibe_active = true;
 
     if(level != state.vibe_level) {
         state.vibe_level = level;
@@ -513,6 +525,16 @@ void AppManager::set_source_mode(int mode)
         state.l_factor = 0;  // zero volume on source_change
         state.r_factor = 0;
         state.source_mode = mode;
+        updated = true;
+    }
+}
+
+void AppManager::set_remote_score(int score)
+{   
+    if(score > 1 || score < -1) return;
+
+    if(score != state.remote_score) {
+        state.remote_score = score;
         updated = true;
     }
 }

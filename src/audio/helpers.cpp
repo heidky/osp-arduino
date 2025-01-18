@@ -70,3 +70,16 @@ void Mult::smooth_increase(float target, float step) {
 
     value = fclamp(new_value, 0.0f, 1.0f);
 }
+
+void Mult::linear_update(float target, float step, float max) {
+    const float delta = target - value;
+    // step *= (abs(delta) + MULT_EXP_BIAS); // exp smoothing
+    float new_value = value;
+
+    if(abs(delta) < step * 1.01)  new_value = target;
+    else if (delta > 0) new_value += step;
+    else if (delta < 0) new_value -= step;
+
+    value = fclamp(new_value, 0.0f, max);
+}
+

@@ -89,17 +89,26 @@ struct State {
     int bt_mode_tens_width = 6;
     int bt_mode_tens_freq = 130;
 
+    // SETTINGS
     int settings_cursor = 0;
     int settings_invert_lr = false;
     int settings_invert_phase = false;
 
+    // BLE
     bool ble_connected = false;
-    int duck_level = 0;
     int vibe_level = 0;
+    bool vibe_active = false;
+    int32_t remote_score = 0;
 };
 
 #define LR_FACTOR_MAX 99
 #define VIBE_LEVEL_MAX 20
+
+
+struct UiState {
+    float r_level;
+    float l_level;
+};
 
 
 class AppManager {
@@ -107,6 +116,7 @@ public:
     bool updated = false;
 
     State state;
+    UiState ui_state;
 
     void set_page(Page p);
     void set_l_factor(int16_t factor);
@@ -129,8 +139,8 @@ public:
     void set_invert_phase(bool i);
 
     void set_ble_connected(bool connected);
-    void set_duck_level(int level);
-    void set_vibe_level(int level);
+    void set_vibe_level(int level, bool activate=false);
+    void set_remote_score(int score);
 
     void inc_source_cursor(int d);
     void set_source_mode(int mode);

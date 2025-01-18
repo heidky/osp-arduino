@@ -14,7 +14,25 @@
 
 #define TX_BUFF_SIZE 256
 
-const static char *vibe_prefix = "Vibrate";
+const static char *PREFIX_VIBE = "Vibrate";
+const static char *PREFIX_REMOTE_BUTTONS = "rem_b";
+
+
+static bool extract_cmd_data(const char *prefix, char *buff, const char *col_ptr, int32_t *out_data) {
+    const size_t prefix_len = strlen(prefix);
+
+    if(strncmp(prefix, buff, prefix_len) == 0 && col_ptr == (buff + prefix_len)) {
+        char *end_ptr;
+        long data = strtol(col_ptr+1, &end_ptr, 10); // maybe its unsafe if buff is not 0 terminated...
+
+        if(col_ptr+1 == end_ptr || *end_ptr != ';') return false;
+
+        *out_data = (int32_t) data;
+        return true;
+    }
+
+    return false;
+}
 
 
 // todo: this should be a member of BLEServerCallbacks, BLECharacteristicCallbacks
@@ -48,6 +66,7 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
         buff[len] = '\0';
         
         // Serial.println(buff);
+        // Serial.println(uxTaskPriorityGet(NULL));  // prints 19
 
         // check commands
         if (strncmp(buff, "DeviceType;", len) == 0) {
@@ -65,41 +84,29 @@ class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
             s_rx_charasteric->notify();
         }
         else {
-            const char *col_pos = strchr(buff, ':');
-            if(col_pos == NULL) return;
+            const char *col_ptr = strchr(buff, ':');
+            if(col_ptr == NULL) return;
+            
+            int32_t data = 0;
+            if(extract_cmd_data(PREFIX_VIBE, buff, col_ptr, &data)) {
+                if(data < 0 || data > 20 ) return;
 
-            const size_t prefix_len = strlen(vibe_prefix);
-
-            if(strncmp(vibe_prefix, buff, prefix_len) == 0 && col_pos == (buff + prefix_len)) {
-                char *end_ptr;
-                long data = strtol(col_pos+1, &end_ptr, 10);
-
-                if(col_pos+1 == end_ptr || *end_ptr != ';') return;
-                if(data > 20 || data < 0) return;
-
+                // > UPDATE STATE
                 // Serial.println((int) data);
-                s_manager->set_vibe_level((int) data);
+                s_manager->set_vibe_level(data, true);
 
+                // > REPLY OK
                 s_rx_charasteric->setValue("Ok;"); // reply full battery
                 s_rx_charasteric->notify();
             }
+            else if(extract_cmd_data(PREFIX_REMOTE_BUTTONS, buff, col_ptr, &data)) {
+                if(data == 0) s_manager->set_remote_score(0);
+                else if(data == 10 ) s_manager->set_remote_score(1);
+                else if (data == 1 || data == 11) s_manager->set_remote_score(-1);
+            } 
         }
     }
 };
-
-
-// class MyCharCallbacks: public BLECharacteristicCallbacks {
-//     void onWrite(BLECharacteristic* pCharacteristic) {
-//         size_t len = pCharacteristic->getLength();
-//         uint8_t* data = pCharacteristic->getData();
-
-//         if(len > 0) {
-//             uint8_t duck_level = data[0];
-//             manager.set_duck_level(duck_level);
-//         }
-//     }
-// };
-
 
 BLEManager::BLEManager(AppManager *manager)
 {

@@ -29,9 +29,11 @@
 
 
 // ========== AUDIO PROCESSING =======
-#define LR_RISE_TIME    1.0f
-#define VIBE_RISE_TIME  0.5f
+#define LR_RISETIME    1.0f
+#define VIBE_RISETIME  0.5f
 
-#define DUCK_RISE_TIME  0.33f
-#define DUCK_LEVEL_1    0.6f
-#define DUCK_LEVEL_2    0.3f
+#define REMOTE_BOOST_MULT       1.3f
+#define REMOTE_BOOST_RISETIME   120.f
+#define REMOTE_BOOST_FALLTIME   30.f
+#define REMOTE_DUCK_MULT        0.60f
+#define REMOTE_DUCK_RISETIME    1.f

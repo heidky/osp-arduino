@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <BluetoothA2DPSink.h>
+// #include <BluetoothA2DPSinkQueued.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 
@@ -15,40 +16,33 @@
 
 // #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 // #include <esp_log.h>
-
-#define SERV_UUID "bdfd0000-00ed-4ef0-b809-9075032b21c2"
-#define CHAR_UUID "bdfd0001-00ed-4ef0-b809-9075032b21c2"
-
-
 // #define INTERNAL_DAC
 
 Display_ssd1306 display;
 TaskHandle_t Task_display;
 
-BTOutput bt_output;
-BluetoothA2DPSink a2dp_sink;
-
 AppManager manager;
 AudioProcessor audio_processor(&manager);
 BLEManager ble(&manager);
 
-SoundGenerator generator(&manager);
 I2SRouter router;
+SoundGenerator generator(&manager);
+
+BTOutput bt_output;
+BluetoothA2DPSink a2dp_sink;
+// BluetoothA2DPSinkQueued a2dp_sink;
 
 RotaryEncoder l_encoder(GPIO_ROTARY_L_CLK, GPIO_ROTARY_L_DT);
 Button l_button(GPIO_ROTARY_L_SW);
 RotaryEncoder r_encoder(GPIO_ROTARY_R_CLK, GPIO_ROTARY_R_DT);
 Button r_button(GPIO_ROTARY_R_SW);
 Button m_button(GPIO_BUTTON_M);
-long m_millis = -9999;
 
 
 void TaskCode_display(void *) {
     for(;;) {
-        if(manager.updated) {
-            manager.updated = false;
-            display.update(manager.state);
-        }
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        display.update(manager.state, manager.ui_state);
 
         yield();
         delay(10);
@@ -135,6 +129,9 @@ void setup() {
 
 
 void loop() {
+    static uint32_t loop_count = 0;
+    static long m_millis = -9999;
+
     int l_value = l_encoder.read();
     int r_value = r_encoder.read();
 
@@ -166,6 +163,18 @@ void loop() {
         m_millis = millis();
     }
 
+    if(loop_count % 10 == 0) {
+        manager.ui_state.l_level = audio_processor.meter_l.value;
+        manager.ui_state.r_level = audio_processor.meter_r.value;
+        manager.updated = true;
+    }
+
+    if(manager.updated) {
+        manager.updated = false;
+        xTaskNotifyGive(Task_display);
+    }
+
+    loop_count++;
     delay(1);
     yield();
 }

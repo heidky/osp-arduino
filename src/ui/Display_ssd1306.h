@@ -11,7 +11,9 @@ class Display_ssd1306 {
 protected:
     Adafruit_SSD1306 display;
     State state;
+    UiState ui_state;
 
+    // PAGES
     void draw_Main();
     void draw_BtMode_Selection();
 
@@ -24,15 +26,18 @@ protected:
     void draw_Settings_Invert();
     void draw_Settings_Ramp();
 
+    // HELPERS
     void draw_text(int16_t x, int16_t y, const char *s, bool top, bool right);
     void draw_text(int16_t x, int16_t y, const char *s, bool right);
     void draw_text(int16_t x, int16_t y, int s, bool top, bool right);
     void draw_2_digit_number(int16_t d1, int16_t d2, int16_t x, int16_t y_btm, int16_t spacing, bool reverse);
+    void draw_2_digit_number(int16_t d12, int16_t x, int16_t y_btm, int16_t spacing, bool reverse);
+    void draw_vertical_bar(float perc, int16_t x, int16_t y_btm, int16_t y_top, int16_t w, bool x_right_align);
 
 public:
     Display_ssd1306();
 
     void begin();
     void splash();
-    void update(State state);
+    void update(const State &state, const UiState &ui_state);
 };

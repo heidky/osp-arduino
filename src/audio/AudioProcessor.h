@@ -15,10 +15,10 @@ public:
     float intensity_r = 0;
     float intensity_alpha = 0.001;
 
-    // float duck_current = 0.0;
     Mult l_mult;
     Mult r_mult;
     Mult vibe_mult;
+    Mult remote_mult;
 
     AudioProcessor(AppManager* manager);
 
@@ -29,4 +29,7 @@ public:
         // Serial.print("volume set: ");
         // Serial.println(volume);
     }
+
+    ExpAvg meter_l = ExpAvg(0.01f);
+    ExpAvg meter_r = ExpAvg(0.01f);
 };

@@ -29,8 +29,9 @@ void Display_ssd1306::splash() {
 }
 
 
-void Display_ssd1306::update(State state) {
+void Display_ssd1306::update(const State &state, const UiState &ui_state) {
     this->state = state;
+    this->ui_state = ui_state;
     display.clearDisplay();
     // display.drawRect(0, 0, 128, 32, WHITE);
 
@@ -70,34 +71,21 @@ void Display_ssd1306::update(State state) {
 
 
 void Display_ssd1306::draw_Main() {
-    const uint8_t l_factor = state.l_factor;
-    const uint8_t r_factor = state.r_factor;
-    const bool bt_connected = state.bt_connected;
-
-    uint8_t l1 = l_factor / 10;
-    uint8_t l2 = l_factor % 10;
-    uint8_t r1 = r_factor / 10;
-    uint8_t r2 = r_factor % 10;
-
-    const bool ble_connected = state.ble_connected;
-    const int duck_level = state.duck_level;
-    const int vibe_level = state.vibe_level;
-
     // L, R numbers and center icon
     const int btm = 62;
     display.setFont(&FreeSans18pt7b);
-    draw_2_digit_number(l1, l2, 1,     btm, 19, false);
-    draw_2_digit_number(r1, r2, 127+1, btm, 19, true);
+    draw_2_digit_number(state.l_factor, 1,     btm, 19, false);
+    draw_2_digit_number(state.r_factor, 127+1, btm, 19, true);
     display.drawBitmap(128/2-8, btm-18, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
 
     // status indicators
-    if(bt_connected) {
+    if(state.bt_connected) {
         display.fillRect(128/2-8, -1, 16, 6, WHITE);
     } else {
         display.drawRect(128/2-8, -1, 16, 6, WHITE);
     }
 
-    if(ble_connected) {
+    if(state.ble_connected) {
         display.fillRect(128/2+8+1, -1, 8, 6, WHITE);
     } else {
         display.drawRect(128/2+8+1, -1, 8, 6, WHITE);
@@ -108,14 +96,29 @@ void Display_ssd1306::draw_Main() {
     // draw_2_digit_number(l1, l2, 1,     btm - 27, 13, false);
     // draw_2_digit_number(r1, r2, 127+1, btm - 27, 13, true);
 
-    // vibe level
-    display.setFont(&FreeSans9pt7b);
-    display.setCursor(128/4*3-4 + 12, 13);
-    display.print(vibe_level);
-
     display.setFont(&FreeSans6pt7b);
     const char *source_text = (state.source_mode == SOURCE_BT) ? "BT" : "Gen";
     draw_text(3, 12, source_text, false);
+
+    const int mod_btm = 16+12;
+     // vibe level
+    if(state.vibe_active) { 
+        display.setFont(&FreeSans6pt7b);
+        display.setCursor(128/2-4-8-2, mod_btm);
+        display.print('V');
+        draw_2_digit_number(state.vibe_level, 128/2-4, mod_btm, 6+1, false);
+    }
+    // remote state
+    else if(state.remote_score != 0) {
+        display.setFont(&FreeSans6pt7b);
+        if(state.remote_score > 0) 
+            draw_text(128/2-8, mod_btm, "UP", false);
+        else
+            draw_text(128/2-8-2, mod_btm, "DW", false);
+    }
+
+    draw_vertical_bar(ui_state.l_level, 64-20,   63, 36, 3, false);
+    draw_vertical_bar(ui_state.r_level, 64+20+2, 63, 36, 3, true);
 }
 
 
@@ -264,4 +267,22 @@ void Display_ssd1306::draw_2_digit_number(int16_t d1, int16_t d2, int16_t x, int
         display.setCursor(x - spacing, y_btm);
         display.print(d2);
     }
+}
+
+void Display_ssd1306::draw_2_digit_number(int16_t d12, int16_t x, int16_t y_btm, int16_t spacing, bool reverse) {
+    uint8_t d1 = d12 / 10;
+    uint8_t d2 = d12 % 10;
+    draw_2_digit_number(d1, d2, x, y_btm, spacing, reverse);
+}
+
+void Display_ssd1306::draw_vertical_bar(float perc, int16_t x, int16_t y_btm, int16_t y_top, int16_t w, bool x_right_align)
+{
+    if(perc < 1e-4f) return;
+    const int16_t x_left = x_right_align ? x - w : x;
+    const int16_t x_line = x_right_align ? x - 1 : x;
+    int16_t y_fill = y_btm + (y_top - y_btm) * perc;
+    display.fillRect(x_left, y_fill, w,  (y_btm-y_fill), WHITE);
+    display.drawFastVLine(x_line, y_top, y_btm - y_top, WHITE);
+    display.drawFastHLine(x_left, y_top, w, WHITE);
+    // display.drawRect(x, y_top,  w,  1,              WHITE);
 }
