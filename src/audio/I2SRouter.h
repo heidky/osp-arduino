@@ -38,6 +38,16 @@ public:
     void set_bt_sample_rate(int32_t rate);
     void set_bt_active(bool active);
 
+    inline void get_meter(float *out_l, float *out_r) {
+        *out_l = common_processing.meter_l.value;
+        *out_r = common_processing.meter_r.value;
+    }
+
+    inline void reset_meter() {
+        common_processing.meter_l.value = 0;
+        common_processing.meter_r.value = 0;
+    }
+
 protected:
     friend void i2s_task_handler_(void *arg);
 

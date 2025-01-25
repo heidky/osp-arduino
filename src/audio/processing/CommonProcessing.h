@@ -10,6 +10,10 @@ public:
 
     void process(State &state, Frame *data, size_t frame_count, int32_t SR);
     void reset();
+
+    ExpAvg meter_l = ExpAvg(0.01f);
+    ExpAvg meter_r = ExpAvg(0.01f);
+
 private:
     uint32_t time = 0;
 

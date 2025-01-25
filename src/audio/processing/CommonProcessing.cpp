@@ -29,6 +29,15 @@ void CommonProcessing::process(State &state, Frame *data, size_t frame_count, in
         int32_t pcm_l = data[i].channel1;
         int32_t pcm_r = data[i].channel2;
 
+        // UPDATE METER (once per bt data batch)
+        // ------------------------
+        if(time % (1024/4) == 0) {
+            const float norm_abs_l = (float)abs(pcm_l) / INT16_MAX * SQRT2;
+            const float norm_abs_r = (float)abs(pcm_r) / INT16_MAX * SQRT2;
+            meter_l.smooth_update(norm_abs_l);
+            meter_r.smooth_update(norm_abs_r);
+        }
+
         // >>> SETTINGS
         // ------------------------
         if(state.settings_invert_phase) {

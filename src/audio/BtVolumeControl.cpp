@@ -19,14 +19,7 @@ void BtVolumeControl::update_audio_data(Frame* data, uint16_t frame_count) {
         memset(data, 0, sizeof(Frame) * frame_count);
     }
     else {
-        // UPDATE METER (once per bt data batch)
-        const float norm_abs_l = (float)abs(data[0].channel1) / (float)INT16_MAX * SQRT2;
-        meter_l.smooth_update(norm_abs_l);
-
-        const float norm_abs_r = (float)abs(data[0].channel2) / (float)INT16_MAX * SQRT2;
-        meter_r.smooth_update(norm_abs_r);
-
-        // SCALE BY VOLUME
+        // scale by volume
         const float volume_target = fclamp((float)volumeFactor / volumeFactorMax, 0.f, 1.f);
         const float volume_step = 1.f / LR_RISETIME / 44100 / 4;
 

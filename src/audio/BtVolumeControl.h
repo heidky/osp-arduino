@@ -20,8 +20,6 @@ public:
         this->muted = muted;
     }
 
-    ExpAvg meter_l = ExpAvg(0.01f);
-    ExpAvg meter_r = ExpAvg(0.01f);
 protected:
     volatile bool muted = false;
     Mult volume_mult;

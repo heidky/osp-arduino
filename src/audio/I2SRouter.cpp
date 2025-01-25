@@ -161,6 +161,7 @@ void I2SRouter::i2s_task_handler()
             ringbuf_state = RingbufState::Preloading;
             ringbuf_needs_clearing = false;
             xSemaphoreGive(ringbuf_clearing);
+            reset_meter();
         }
 
         if(selected_output == OutputChoice::Bt) 
@@ -180,6 +181,7 @@ void I2SRouter::i2s_task_handler()
                 if(ringbuf_items_waiting() >= RINGBUF_PRELOAD_ITEMS) {
                     ringbuf_state = RingbufState::Processing; 
                 }
+
             }
             else if (ringbuf_state == RingbufState::Dropping) {
                 size_t item_size;

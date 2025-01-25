@@ -165,8 +165,7 @@ void loop() {
     }
 
     if(loop_count % 10 == 0) {
-        manager.ui_state.l_level = bt_volume_control.meter_l.value;
-        manager.ui_state.r_level = bt_volume_control.meter_r.value;
+        router.get_meter(&manager.ui_state.l_level, &manager.ui_state.r_level);
         manager.updated = true;
     }
 
