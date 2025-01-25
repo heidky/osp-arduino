@@ -13,7 +13,7 @@ public:
 
     virtual void set_volume(uint8_t volume) {
         volumeFactor = volume;
-        // ESP_LOGE("BT_CONTROL", "volume set: %d", volume);
+        ESP_LOGE("BT_CONTROL", "volume set: %d", volume);
     }
 
     void set_muted(bool muted) {

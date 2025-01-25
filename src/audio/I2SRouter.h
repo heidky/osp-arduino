@@ -30,10 +30,13 @@ public:
     size_t on_bt_data(Frame *data, size_t frame_count);
 
     void set_pin_config(i2s_pin_config_t pin_config)    { this->pin_config = pin_config; }
-    void set_i2s_port(i2s_port_t i2s_num)               { i2s_port = i2s_num; }
+    void set_i2s_port(i2s_port_t i2s_num)               { this->i2s_port = i2s_num; }
     void set_i2s_config(i2s_config_t i2s_config)        { this->i2s_config = i2s_config; }
 
     void set_selected_output(OutputChoice output);
+
+    void set_bt_sample_rate(int32_t rate);
+    void set_bt_active(bool active);
 
 protected:
     friend void i2s_task_handler_(void *arg);
@@ -51,6 +54,8 @@ protected:
     volatile RingbufState ringbuf_state = RingbufState::Preloading;
     size_t ringbuf_chunks_num = 20;
     size_t ringbuf_size = ringbuf_chunks_num * (128 * sizeof(Frame) + 8);
+    SemaphoreHandle_t ringbuf_clearing;
+    volatile bool ringbuf_needs_clearing = false;
 
     size_t inline ringbuf_fill_perc() {
         UBaseType_t items_waiting = 0;
@@ -64,16 +69,15 @@ protected:
         return items_waiting;
     }
 
-    void inline clear_ringbuf() {
-        size_t item_size;
-        void *data;
-        while((data = xRingbufferReceive(ringbuf_handle, &item_size, 0)) != NULL) {
-            vRingbufferReturnItem(ringbuf_handle, data);
-        }
-    }
-
     CommonProcessing common_processing;
     BtProcessing bt_processing;
 
-    void set_sample_rate(uint32_t sample_rate);
+    void set_sample_rate(int32_t sample_rate);
+
+    volatile int32_t bt_sample_rate = 44100;
+    volatile bool bt_active = true;
+    volatile bool bt_sample_rate_changed = false;
+    SemaphoreHandle_t bt_sample_rate_mutex = NULL;
+
+    volatile bool generator_sample_rate_changed = false;
 };

@@ -38,6 +38,9 @@ I2SRouter::I2SRouter() {
         .data_out_num = 22,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
+
+    bt_sample_rate_mutex = xSemaphoreCreateMutex();
+    ringbuf_clearing = xSemaphoreCreateMutex();
 }
 
 bool I2SRouter::begin() {
@@ -77,60 +80,64 @@ void I2SRouter::end() {// TODO
 
 size_t I2SRouter::on_bt_data(Frame *data, size_t frame_count) {
     if(selected_output != OutputChoice::Bt) {
-        return frame_count;
+        return frame_count; // consider the frames correcly proccesed, if not in BT mode
     }
-
-    // TODO: convert to proper tracing thing
-    // static long last_call_millis = -9999;
-    // long now_millis = millis();
-    // if(last_call_millis > 0) Serial.println(now_millis - last_call_millis);
-    // last_call_millis = now_millis;
 
     if(ringbuf_state == RingbufState::Dropping) {
-        return 0;
+        return 0; // only report failed write if dropping frames
     }
 
-    static const size_t FRAMES_PER_CHUNK = 128;
+    static const size_t FRAMES_PER_ITEM = 128;
     static const TickType_t WRITE_TIMEOUT_MS = 6;
 
-    size_t written_frames = 0;
+    if(xSemaphoreTake(ringbuf_clearing, 0) == pdTRUE) { // skip this write if clearing the ringbuff
+        size_t written_frames = 0;
 
-    while(written_frames < frame_count) {
-        const Frame *data_to_write = (data + written_frames);
-        const size_t remaining_frames = frame_count - written_frames;
-        const size_t frames_to_write = remaining_frames > FRAMES_PER_CHUNK ? FRAMES_PER_CHUNK : remaining_frames;
+        while(written_frames < frame_count) { // divide in data in items each containing a number of frames equal to FRAMES_PER_ITEM (128)
+            const Frame *data_to_write = (data + written_frames);
+            const size_t remaining_frames = frame_count - written_frames;
+            const size_t frames_to_write = remaining_frames > FRAMES_PER_ITEM ? FRAMES_PER_ITEM : remaining_frames;
 
-        if(frames_to_write != FRAMES_PER_CHUNK) ESP_LOGE(I2SR_TAG, "bad chunk size");
+            if(frames_to_write != FRAMES_PER_ITEM) ESP_LOGE(I2SR_TAG, "bad item size");
 
-        const BaseType_t res = xRingbufferSend(ringbuf_handle, (void*)data_to_write, frames_to_write * sizeof(Frame), pdMS_TO_TICKS(WRITE_TIMEOUT_MS));
-        if(res == pdTRUE) {
-            written_frames += frames_to_write;
+            const BaseType_t res = xRingbufferSend(ringbuf_handle, (void*)data_to_write, frames_to_write * sizeof(Frame), pdMS_TO_TICKS(WRITE_TIMEOUT_MS));
+            if(res == pdTRUE) {
+                written_frames += frames_to_write;
+            }
+            else {
+                ESP_LOGE(I2SR_TAG, "ringbuffer full -> enter dropping");
+                ringbuf_state = RingbufState::Dropping;
+                return written_frames;
+            }
         }
-        else {
-            ESP_LOGE(I2SR_TAG, "ringbuffer full -> enter dropping");
-            ringbuf_state = RingbufState::Dropping;
-            return written_frames;
-        }
+
+        xSemaphoreGive(ringbuf_clearing);
     }
 
-    return frame_count;
+    return frame_count; // consider all data processed no matter what
 }
+
 
 void I2SRouter::set_selected_output(OutputChoice new_output) {
     if(new_output == this->selected_output) return;
 
     if(new_output == OutputChoice::Bt) {
-        clear_ringbuf();
-        ringbuf_state = RingbufState::Preloading; 
+        ringbuf_needs_clearing = true;
+        ringbuf_state = RingbufState::Preloading;
+        bt_sample_rate_changed = true;
         this->selected_output = new_output;
+
         Serial.println("switched routed output to Bt");  // TODO: convert to proper logging
     }
     else if(new_output == OutputChoice::Gen) {
+        generator_sample_rate_changed = true;
         this->selected_output = new_output;
-        clear_ringbuf();
+        ringbuf_needs_clearing = true;
+
         Serial.println("switching routed output to Gen");  // TODO: convert to proper logging
     }
 }
+
 
 void I2SRouter::i2s_task_handler() 
 {
@@ -143,8 +150,32 @@ void I2SRouter::i2s_task_handler()
     {   
         manager->copy_state_into(state);
 
+        // clear ring buffer if needed
+        if (ringbuf_needs_clearing) {
+            xSemaphoreTake(ringbuf_clearing, portMAX_DELAY);  // prevents writing to the ringbuf
+            size_t item_size;
+            void *data;
+            while((data = xRingbufferReceive(ringbuf_handle, &item_size, 0)) != NULL) {
+                vRingbufferReturnItem(ringbuf_handle, data);
+            }
+            ringbuf_state = RingbufState::Preloading;
+            ringbuf_needs_clearing = false;
+            xSemaphoreGive(ringbuf_clearing);
+        }
+
         if(selected_output == OutputChoice::Bt) 
-        {
+        {   
+            // align sample rate if needed
+            int32_t SR = 44100;
+            xSemaphoreTake(bt_sample_rate_mutex, portMAX_DELAY);
+            if(bt_sample_rate_changed) {
+                bt_sample_rate_changed = false;
+                set_sample_rate(bt_sample_rate);
+            }
+            SR = bt_sample_rate;
+            xSemaphoreGive(bt_sample_rate_mutex);
+
+            // buffer is preloading or dropping
             if (ringbuf_state == RingbufState::Preloading) {
                 if(ringbuf_items_waiting() >= RINGBUF_PRELOAD_ITEMS) {
                     ringbuf_state = RingbufState::Processing; 
@@ -162,6 +193,7 @@ void I2SRouter::i2s_task_handler()
                 ringbuf_state = RingbufState::Preloading;
             }
 
+            // buffer is processing
             if (ringbuf_state == RingbufState::Processing) {
                 size_t item_size = 0;
                 void *item = xRingbufferReceive(ringbuf_handle, &item_size, pdMS_TO_TICKS(READ_TIMEOUT_MS));
@@ -169,8 +201,8 @@ void I2SRouter::i2s_task_handler()
                 if(item != NULL && item_size > 0) {
                     // START_PERF(processing)
                     const size_t frame_size = item_size/sizeof(Frame);
-                    bt_processing.process(state, (Frame*)item, frame_size, 44100);
-                    common_processing.process(state, (Frame*)item, frame_size, 44100);
+                    bt_processing.process(state, (Frame*)item, frame_size, SR);
+                    common_processing.process(state, (Frame*)item, frame_size, SR);
                     // STOP_PERF(processing, 100)
 
                     size_t bytes_written;
@@ -180,7 +212,9 @@ void I2SRouter::i2s_task_handler()
                     vRingbufferReturnItem(ringbuf_handle, item);
                 }
                 else {
-                    ESP_LOGE(I2SR_TAG, "data starvation -> enter preloading");
+                    if(bt_active) {
+                        ESP_LOGE(I2SR_TAG, "data starvation -> enter preloading");
+                    }
                     ringbuf_state = RingbufState::Preloading;
                 }
             }
@@ -193,9 +227,15 @@ void I2SRouter::i2s_task_handler()
             static const size_t GEN_CHUNK_FRAMES = 128;
 
             const void *data = generator->receive_chunk(GEN_CHUNK_FRAMES);
+            const int32_t SR = generator->get_sample_rate();
+
+            if(generator_sample_rate_changed) {
+                generator_sample_rate_changed = false;
+                set_sample_rate(generator->get_sample_rate());
+            }
 
             if(data != NULL) {
-                common_processing.process(state, (Frame*)data, GEN_CHUNK_FRAMES, 44100);
+                common_processing.process(state, (Frame*)data, GEN_CHUNK_FRAMES, SR);
 
                 size_t bytes_written = 0;
                 const size_t size = GEN_CHUNK_FRAMES * sizeof(Frame);
@@ -209,13 +249,35 @@ void I2SRouter::i2s_task_handler()
     }
 }
 
-void I2SRouter::set_sample_rate(uint32_t sample_rate) {
-    ESP_LOGI(BT_AV_TAG, "%s %d", __func__, sample_rate);
+
+void I2SRouter::set_sample_rate(int32_t sample_rate) {
+    ESP_LOGE(I2SR_TAG, "%s %d", __func__, sample_rate);
     i2s_config.sample_rate = sample_rate;
     
     if (i2s_set_sample_rates(i2s_port, i2s_config.sample_rate) != ESP_OK) {
-        ESP_LOGE(BT_AV_TAG, "i2s_set_clk failed with samplerate=%d", i2s_config.sample_rate);
+        ESP_LOGE(I2SR_TAG, "i2s_set_clk failed with samplerate=%d", i2s_config.sample_rate);
     } else {
-        ESP_LOGI(BT_AV_TAG, "audio player configured, samplerate=%d", i2s_config.sample_rate);
+        ESP_LOGI(I2SR_TAG, "audio player configured, samplerate=%d", i2s_config.sample_rate);
     }
+}
+
+
+void I2SRouter::set_bt_sample_rate(int32_t rate) {
+    if(xSemaphoreTake(bt_sample_rate_mutex, portMAX_DELAY) == pdTRUE) {
+        ESP_LOGE(I2SR_TAG, "set_bt_sample_rate %d", rate);
+
+        if(rate != bt_sample_rate) {
+            bt_sample_rate = rate;
+            bt_sample_rate_changed = true;
+        }
+        xSemaphoreGive(bt_sample_rate_mutex);
+    } 
+    else {
+        ESP_LOGE(I2SR_TAG, "cannote take bt_sample_rate_mutex");
+    }
+}
+
+
+void I2SRouter::set_bt_active(bool active) {
+    bt_active = active;
 }

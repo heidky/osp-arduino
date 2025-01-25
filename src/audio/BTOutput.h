@@ -4,9 +4,9 @@
 #include "audio/I2SRouter.h"
 
 
-class BTOutput : public BluetoothA2DPOutput {
+class BtOutput : public BluetoothA2DPOutput {
 public:
-    BTOutput() : BluetoothA2DPOutput() {};
+    BtOutput() : BluetoothA2DPOutput() {};
     I2SRouter *router = nullptr;
 
     virtual bool begin() override;
@@ -16,6 +16,6 @@ public:
     virtual void set_output_active(bool active) override;
 protected:
 
-    int samplerate = 44100;
+    int32_t sample_rate = 44100;
     bool i2s_active = true;
 };

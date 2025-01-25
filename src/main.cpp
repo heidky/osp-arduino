@@ -28,8 +28,8 @@ I2SRouter router;
 SoundGenerator generator(&manager);
 
 // BT
-BTOutput bt_output;
 BluetoothA2DPSink a2dp_sink;
+BtOutput bt_output;
 BtVolumeControl bt_volume_control;
 // BluetoothA2DPSinkQueued a2dp_sink;
 BLEManager ble(&manager);
@@ -71,7 +71,7 @@ void bt_state_changed(esp_a2d_connection_state_t s, void*) {
 void router_update_output() {
     State state;
     if(manager.copy_state_into(state)) {
-        bt_volume_control.set_muted(state.source_mode == SOURCE_BT);
+        bt_volume_control.set_muted(state.source_mode != SOURCE_BT);
         router.set_selected_output(state.source_mode == SOURCE_BT ? OutputChoice::Bt : OutputChoice::Gen);
     }
 }

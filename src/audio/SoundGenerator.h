@@ -12,13 +12,15 @@ public:
 
     Frame *receive_chunk(size_t frame_count);
 
+    inline int32_t get_sample_rate() { return sample_rate; }
+
 protected:
     Frame *buffer = NULL;
     size_t buffer_frame_count = 512;
 
     AppManager *manager;
     TaskHandle_t task_handle;
-    float sample_rate = 44100.f;
+    int32_t sample_rate = 44100;
 
     uint32_t time = 0;
     bool is_buffer_cleared;
