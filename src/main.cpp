@@ -3,8 +3,10 @@
 // #include <BluetoothA2DPSinkQueued.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
+#include <esp_log.h>
 
 #include "config.h"
+#include "logging.h"
 #include "ui/Display_ssd1306.h"
 #include "state/AppManager.h"
 #include "input/RotaryEncoder.h"
@@ -13,9 +15,7 @@
 #include "audio/BTOutput.h"
 #include "ble/BLEManager.h"
 #include "audio/SoundGenerator.h"
-// #include <esp_log.h>
 
-// #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
 AppManager manager;
 
@@ -51,7 +51,7 @@ void TaskCode_display(void *) {
             display.update(state, manager.ui_state);
         }
 
-        yield();
+        // yield();
         delay(10);
     }
 }
@@ -59,12 +59,9 @@ void TaskCode_display(void *) {
 
 void bt_state_changed(esp_a2d_connection_state_t s, void*) {
     manager.set_bt_connected_(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
+    a2dp_sink.set_volume(0); // always start with 0 audio
 
-    // always start with 0 audio
-    a2dp_sink.set_volume(0);
-
-    Serial.print("connected: ");
-    Serial.println(s == ESP_A2D_CONNECTION_STATE_CONNECTED);
+    ESP_LOGI(OSP_TAG, "BT connected: %d", s == ESP_A2D_CONNECTION_STATE_CONNECTED);
 }
 
 
@@ -78,8 +75,7 @@ void router_update_output() {
 
 
 void setup() {
-    Serial.begin(115200);
-    Serial.println("\nOsp start");
+    log_init();
 
     Wire.setPins(GPIO_I2C_SDA, GPIO_I2C_SCL);
     // init display

@@ -1,8 +1,8 @@
 #include "SoundGenerator.h"
 #include <Arduino.h>
 #include "helpers.h"
+#include "logging.h"
 
-#define SOUND_GEN_TAG "SOUND_GEN"
 
 SoundGenerator::SoundGenerator(AppManager *manager) : manager(manager) {}
 

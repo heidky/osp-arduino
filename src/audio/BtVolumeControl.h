@@ -3,6 +3,7 @@
 #include "BluetoothA2DPSink.h"
 #include "state/AppManager.h"
 #include "helpers.h"
+#include "logging.h"
 
 
 class BtVolumeControl : public A2DPVolumeControl {
@@ -13,7 +14,7 @@ public:
 
     virtual void set_volume(uint8_t volume) {
         volumeFactor = volume;
-        ESP_LOGE("BT_CONTROL", "volume set: %d", volume);
+        ESP_LOGI(OSP_TAG, "volume set: %d", volume);
     }
 
     void set_muted(bool muted) {

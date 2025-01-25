@@ -1,8 +1,7 @@
 #include "I2SRouter.h"
 #include <Arduino.h>
 #include "log/perf_timer.h"
-
-#define I2SR_TAG "I2S_ROUTER"
+#include "logging.h"
 
 void i2s_task_handler_(void *arg) {   
     I2SRouter *router = (I2SRouter*)arg;
@@ -98,14 +97,14 @@ size_t I2SRouter::on_bt_data(Frame *data, size_t frame_count) {
             const size_t remaining_frames = frame_count - written_frames;
             const size_t frames_to_write = remaining_frames > FRAMES_PER_ITEM ? FRAMES_PER_ITEM : remaining_frames;
 
-            if(frames_to_write != FRAMES_PER_ITEM) ESP_LOGE(I2SR_TAG, "bad item size");
+            if(frames_to_write != FRAMES_PER_ITEM) ESP_LOGW(I2SR_TAG, "bad item size");
 
             const BaseType_t res = xRingbufferSend(ringbuf_handle, (void*)data_to_write, frames_to_write * sizeof(Frame), pdMS_TO_TICKS(WRITE_TIMEOUT_MS));
             if(res == pdTRUE) {
                 written_frames += frames_to_write;
             }
             else {
-                ESP_LOGE(I2SR_TAG, "ringbuffer full -> enter dropping");
+                ESP_LOGW(I2SR_TAG, "ringbuffer full -> enter dropping");
                 ringbuf_state = RingbufState::Dropping;
                 return written_frames;
             }
@@ -127,14 +126,14 @@ void I2SRouter::set_selected_output(OutputChoice new_output) {
         bt_sample_rate_changed = true;
         this->selected_output = new_output;
 
-        Serial.println("switched routed output to Bt");  // TODO: convert to proper logging
+        ESP_LOGI(I2SR_TAG, "switched routed output: BT");
     }
     else if(new_output == OutputChoice::Gen) {
         generator_sample_rate_changed = true;
         this->selected_output = new_output;
         ringbuf_needs_clearing = true;
 
-        Serial.println("switching routed output to Gen");  // TODO: convert to proper logging
+        ESP_LOGI(I2SR_TAG, "switched routed output: GEN");
     }
 }
 
@@ -191,7 +190,7 @@ void I2SRouter::i2s_task_handler()
                     vRingbufferReturnItem(ringbuf_handle, item);
                 }
 
-                ESP_LOGE(I2SR_TAG, "dropped under water level -> enter processing");
+                ESP_LOGW(I2SR_TAG, "dropped under water level -> enter processing");
                 ringbuf_state = RingbufState::Preloading;
             }
 
@@ -215,7 +214,7 @@ void I2SRouter::i2s_task_handler()
                 }
                 else {
                     if(bt_active) {
-                        ESP_LOGE(I2SR_TAG, "data starvation -> enter preloading");
+                        ESP_LOGW(I2SR_TAG, "data starvation -> enter preloading");
                     }
                     ringbuf_state = RingbufState::Preloading;
                 }
@@ -253,7 +252,7 @@ void I2SRouter::i2s_task_handler()
 
 
 void I2SRouter::set_sample_rate(int32_t sample_rate) {
-    ESP_LOGE(I2SR_TAG, "%s %d", __func__, sample_rate);
+    ESP_LOGI(I2SR_TAG, "%s %d", __func__, sample_rate);
     i2s_config.sample_rate = sample_rate;
     
     if (i2s_set_sample_rates(i2s_port, i2s_config.sample_rate) != ESP_OK) {
@@ -266,7 +265,7 @@ void I2SRouter::set_sample_rate(int32_t sample_rate) {
 
 void I2SRouter::set_bt_sample_rate(int32_t rate) {
     if(xSemaphoreTake(bt_sample_rate_mutex, portMAX_DELAY) == pdTRUE) {
-        ESP_LOGE(I2SR_TAG, "set_bt_sample_rate %d", rate);
+        ESP_LOGI(I2SR_TAG, "set_bt_sample_rate %d", rate);
 
         if(rate != bt_sample_rate) {
             bt_sample_rate = rate;

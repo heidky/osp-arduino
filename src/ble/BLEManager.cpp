@@ -1,6 +1,7 @@
 #include "BLEManager.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
+#include "logging.h"
 
 
 // #define DEVICE_NAME_OVERRIDE "LVS-Z001 (Hush)"
@@ -42,15 +43,15 @@ static BLECharacteristic *s_rx_charasteric;
 
 //Setup callbacks onConnect and onDisconnect
 class MyServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
-    s_manager->set_ble_connected_(true);
-  };
+    void onConnect(BLEServer* pServer) {
+        s_manager->set_ble_connected_(true);
+    };
 
-  void onDisconnect(BLEServer* pServer) {
-    s_manager->set_ble_connected_(false);
-    BLEDevice::startAdvertising();
-    Serial.println("LVS BLE advertising!");
-  }
+    void onDisconnect(BLEServer* pServer) {
+        s_manager->set_ble_connected_(false);
+        BLEDevice::startAdvertising();
+        ESP_LOGI(OSP_TAG, "LVS BLE advertising!");
+    }
 };
 
 class TxCharacteristicCallbacks: public BLECharacteristicCallbacks {
@@ -118,11 +119,6 @@ BLEManager::BLEManager(AppManager *manager)
 void BLEManager::init(const char *device_name)
 {
     BLEDevice::init(device_name);
-    // String mac_address = String(BLEDevice::getAddress().toString().c_str());
-    // mac_address.replace(":", "");
-    // mac_address.toUpperCase();
-    // s_device_type = s_device_type + ":" + mac_address + ";";
-    // Serial.println(s_device_type);
 
     BLEServer *pServer = BLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks());
@@ -159,7 +155,7 @@ void BLEManager::init(const char *device_name)
     pAdvertising->setMinPreferred(0x12);
 
     BLEDevice::startAdvertising();
-    Serial.println("LVS BLE advertising!");
+    ESP_LOGI(OSP_TAG, "LVS BLE advertising!");
 }
 
 

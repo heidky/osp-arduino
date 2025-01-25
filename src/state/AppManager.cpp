@@ -1,6 +1,6 @@
 #include "AppManager.h"
+#include "logging.h"
 
-#define TAG_AM "APP_MANAGER"
 
 AppManager::AppManager() {
     state_mutex = xSemaphoreCreateMutex();
@@ -13,14 +13,14 @@ bool AppManager::copy_state_into(State &out_state) {
         return true;
     }
     else {
-        ESP_LOGE(TAG_AM, "cannot copy app state safely");
+        ESP_LOGE(APPM_TAG, "cannot copy app state safely");
         return false;
     }
 }
 
 void AppManager::action(Action a, void* payload) {
     if(xSemaphoreTake(state_mutex, portMAX_DELAY) != pdTRUE) {
-        ESP_LOGE(TAG_AM, "cannot perform action due state_mutex take failure.");
+        ESP_LOGE(APPM_TAG, "cannot perform action due state_mutex take failure.");
         return;
     };
 
@@ -393,7 +393,7 @@ void AppManager::set_bt_connected_(bool connected) {
         xSemaphoreGive(state_mutex);
     }
     else {
-        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+        ESP_LOGE(APPM_TAG, "state acquire fail cannot call: %s", __func__);
     }
 }
 
@@ -541,7 +541,7 @@ void AppManager::set_ble_connected_(bool connected) {
         xSemaphoreGive(state_mutex);
     }
     else {
-        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+        ESP_LOGE(APPM_TAG, "state acquire fail cannot call: %s", __func__);
     }
 }
 
@@ -567,7 +567,7 @@ void AppManager::set_vibe_level_(int level, bool activate) {
         xSemaphoreGive(state_mutex);
     }
     else {
-        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+        ESP_LOGE(APPM_TAG, "state acquire fail cannot call: %s", __func__);
     }
 }
 
@@ -598,6 +598,6 @@ void AppManager::set_remote_score_(int score) {
         xSemaphoreGive(state_mutex);
     }
     else {
-        ESP_LOGE(TAG_AM, "state acquire fail cannot call: %s", __func__);
+        ESP_LOGE(APPM_TAG, "state acquire fail cannot call: %s", __func__);
     }
 }
