@@ -106,14 +106,15 @@ size_t I2SRouter::on_bt_data(Frame *data, size_t frame_count) {
             else {
                 ESP_LOGW(I2SR_TAG, "ringbuffer full -> enter dropping");
                 ringbuf_state = RingbufState::Dropping;
-                return written_frames;
             }
         }
 
         xSemaphoreGive(ringbuf_clearing);
+        return written_frames; // return numner of actual frames processed
     }
-
-    return frame_count; // consider all data processed no matter what
+    else {
+        return frame_count; // consider all data processed while clearing
+    }
 }
 
 
