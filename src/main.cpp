@@ -24,14 +24,12 @@ Display_ssd1306 display;
 TaskHandle_t Task_display;
 
 // OUTPUT
-I2SRouter router;
-SoundGenerator generator(&manager);
+I2SRouter router(&manager);
 
 // BT
 BluetoothA2DPSink a2dp_sink;
-BtOutput bt_output;
 BtVolumeControl bt_volume_control;
-// BluetoothA2DPSinkQueued a2dp_sink;
+BtOutput router_output(&router);
 BLEManager ble(&manager);
 
 // INPUTS
@@ -51,7 +49,6 @@ void TaskCode_display(void *) {
             display.update(state, manager.ui_state);
         }
 
-        // yield();
         delay(10);
     }
 }
@@ -91,28 +88,22 @@ void setup() {
     // show splashscreen
     display.splash();
     // create display refresh task
-    xTaskCreatePinnedToCore(TaskCode_display, "Task_Display", 2048, NULL, 0, &Task_display, 0);
+    xTaskCreatePinnedToCore(TaskCode_display, "Task_Display", 2048, NULL, 0, &Task_display, 0);    
 
-    // BT INIT
-    a2dp_sink.set_output(bt_output);
-
+    
+    // ROUTER
     i2s_pin_config_t i2s_pin_config = {
         .bck_io_num = GPIO_I2S_BCK,
         .ws_io_num = GPIO_I2S_LCK,
         .data_out_num = GPIO_I2S_DOUT,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
-
     router.set_pin_config(i2s_pin_config);
-    router.manager = &manager;
-    bt_output.router = &router;
-
-    generator.begin();
-    router.generator = &generator;
-
     router.begin();
     router_update_output();
 
+    // BT SINK
+    a2dp_sink.set_output(router_output);
     a2dp_sink.set_volume_control(&bt_volume_control);
     a2dp_sink.set_on_connection_state_changed(&bt_state_changed);
     a2dp_sink.set_volume(0);

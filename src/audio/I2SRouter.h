@@ -19,14 +19,11 @@ enum class RingbufState {
 
 class I2SRouter {
 public:
-    I2SRouter();
+    I2SRouter(AppManager *manager);
 
     bool begin();
     void end(); 
 
-    AppManager *manager = nullptr;
-
-    SoundGenerator *generator = nullptr;
     size_t on_bt_data(Frame *data, size_t frame_count);
 
     void set_pin_config(i2s_pin_config_t pin_config)    { this->pin_config = pin_config; }
@@ -50,6 +47,9 @@ public:
 
 protected:
     friend void i2s_task_handler_(void *arg);
+
+    AppManager *manager = nullptr;
+    SoundGenerator generator;
 
     i2s_port_t i2s_port;
     i2s_config_t i2s_config;

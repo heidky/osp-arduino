@@ -6,15 +6,16 @@
 
 class BtOutput : public BluetoothA2DPOutput {
 public:
-    BtOutput() : BluetoothA2DPOutput() {};
-    I2SRouter *router = nullptr;
+    BtOutput(I2SRouter *router) : BluetoothA2DPOutput(), router(router) {};
 
     virtual bool begin() override;
     virtual void end() override;
     virtual size_t write(const uint8_t *data, size_t len) override;
     virtual void set_sample_rate(int rate) override;
     virtual void set_output_active(bool active) override;
+
 protected:
+    I2SRouter *router = nullptr;
 
     int32_t sample_rate = 44100;
     bool i2s_active = true;

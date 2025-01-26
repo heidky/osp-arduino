@@ -8,7 +8,7 @@ void i2s_task_handler_(void *arg) {
     router->i2s_task_handler();
 }
 
-I2SRouter::I2SRouter() {
+I2SRouter::I2SRouter(AppManager *manager): manager(manager), generator(manager) {
     // default i2s port is 0
     i2s_port = (i2s_port_t)0;
 
@@ -58,6 +58,11 @@ bool I2SRouter::begin() {
     ringbuf_handle = xRingbufferCreate(ringbuf_size, RINGBUF_TYPE_NOSPLIT);
     if (ringbuf_handle == NULL) {
         ESP_LOGE(I2SR_TAG, "ringbuff creation failed");
+        rc = false;
+    }
+
+    if(!generator.begin()) {
+        ESP_LOGE(I2SR_TAG, "generator start failed");
         rc = false;
     }
 
@@ -228,12 +233,12 @@ void I2SRouter::i2s_task_handler()
         {
             static const size_t GEN_CHUNK_FRAMES = 128;
 
-            const void *data = generator->receive_chunk(GEN_CHUNK_FRAMES);
-            const int32_t SR = generator->get_sample_rate();
+            const void *data = generator.receive_chunk(GEN_CHUNK_FRAMES);
+            const int32_t SR = generator.get_sample_rate();
 
             if(generator_sample_rate_changed) {
                 generator_sample_rate_changed = false;
-                set_sample_rate(generator->get_sample_rate());
+                set_sample_rate(generator.get_sample_rate());
             }
 
             if(data != NULL) {
