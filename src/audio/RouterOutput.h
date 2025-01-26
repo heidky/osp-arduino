@@ -4,9 +4,9 @@
 #include "audio/I2SRouter.h"
 
 
-class BtOutput : public BluetoothA2DPOutput {
+class RouterOutput : public BluetoothA2DPOutput {
 public:
-    BtOutput(I2SRouter *router) : BluetoothA2DPOutput(), router(router) {};
+    RouterOutput(I2SRouter *router) : BluetoothA2DPOutput(), router(router) {};
 
     virtual bool begin() override;
     virtual void end() override;

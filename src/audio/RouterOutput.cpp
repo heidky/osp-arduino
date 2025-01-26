@@ -1,27 +1,27 @@
-#include "BTOutput.h"
+#include "RouterOutput.h"
 #include <Arduino.h>
 #include "logging.h"
 
 
-bool BtOutput::begin() {
+bool RouterOutput::begin() {
     return true;
 }
 
-void BtOutput::end() {}
+void RouterOutput::end() {}
 
-size_t BtOutput::write(const uint8_t *data, size_t len) {   
+size_t RouterOutput::write(const uint8_t *data, size_t len) {   
     router->on_bt_data((Frame*) data, len / sizeof(Frame));
     return len;
 }
 
-void BtOutput::set_sample_rate(int rate) {
+void RouterOutput::set_sample_rate(int rate) {
     sample_rate = rate;
     router->set_bt_sample_rate(rate);
 
     ESP_LOGI(OSP_TAG, "BT sample rate: %d", rate);
 }
 
-void BtOutput::set_output_active(bool active) {
+void RouterOutput::set_output_active(bool active) {
     active = active;
     router->set_bt_active(active);
 

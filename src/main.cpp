@@ -12,7 +12,7 @@
 #include "input/RotaryEncoder.h"
 #include "input/Button.h"
 #include "audio/BtVolumeControl.h"
-#include "audio/BTOutput.h"
+#include "audio/RouterOutput.h"
 #include "ble/BLEManager.h"
 #include "audio/SoundGenerator.h"
 
@@ -29,7 +29,7 @@ I2SRouter router(&manager);
 // BT
 BluetoothA2DPSink a2dp_sink;
 BtVolumeControl bt_volume_control;
-BtOutput router_output(&router);
+RouterOutput router_output(&router);
 BLEManager ble(&manager);
 
 // INPUTS
