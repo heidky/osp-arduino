@@ -3,6 +3,21 @@
 #include <A2DPVolumeControl.h>
 
 
+struct SoundGeneratorConfig {
+    float frequency = 400; // [200-1000]
+    int32_t shape = 0; 
+    int32_t lr_delta = 0; // < 0 is phase [0-180], >= 0 frequency delta*50 [0, 100] 
+    // float lr_phase_offset = 0;
+
+    int32_t pulse_shape = 0;
+    int32_t pulse_freq = 3; // [1-10]
+    int32_t pulse_bias = 3; // [1-10]
+
+    int32_t am_shape = 0;
+    float am_freqency = 0;
+    float am_depth = 0;
+};
+
 class SoundGenerator {
 public:
     SoundGenerator(AppManager *manager);
@@ -27,4 +42,10 @@ protected:
 
     void generate_chunk(Frame *data, uint32_t frame_count);
     void clear_buffer();
+
+    float phase_l = 0;
+    float phase_r = 0;
+
+    float phase_pulse = 0;
+    float phase_am = 0;
 };
