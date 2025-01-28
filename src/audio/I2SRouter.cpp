@@ -233,7 +233,7 @@ void I2SRouter::i2s_task_handler()
         {
             static const size_t GEN_CHUNK_FRAMES = 128;
 
-            const void *data = generator.receive_chunk(GEN_CHUNK_FRAMES);
+            const void *data = generator.receive_chunk(GEN_CHUNK_FRAMES, state.gen_config);
             const int32_t SR = generator.get_sample_rate();
 
             if(generator_sample_rate_changed) {

@@ -63,7 +63,11 @@ void Display_ssd1306::update(const State &state, const UiState &ui_state) {
         break;
     case Page::Settings_Ramp:
         draw_Settings_Ramp();
-        break;        
+        break;
+
+    case Page::Generator:
+        draw_Generator();
+        break;
     }
 
     display.display();
@@ -222,6 +226,77 @@ void Display_ssd1306::draw_Settings_Ramp() {
     display.print("Ramp~WIP");
 }
 
+void Display_ssd1306::draw_Generator()
+{   
+    const int16_t items_per_page = 3;
+    const int16_t num_pages = NUM_GEN_CONFIGS / items_per_page;
+    const int16_t page = state.gen_config_cursor / items_per_page;
+
+    // TITLE
+    display.setFont(&FreeSans6pt7b);
+    display.setCursor(3, 12);
+    display.print("Generator [");
+    display.print(page + 1);
+    display.print("/");
+    display.print(num_pages);
+    display.print("]");
+
+    // ROWS
+    const char *labels[] = {"Shape", "Freq", "LR Delta", "PL Shape", "PL Freq", "PL Bias", "AM Shape", "AM Freq", "AM Depth"};
+
+    display.setFont(&FreeSans6pt7b);
+
+    for(int i = 0; i < items_per_page; i++) {
+        const int16_t mid_y = 17 + 2 + 16*i + 8;
+
+        // CHECK BOX CURSOR
+        int16_t idx = page * items_per_page + i;
+        display.drawRoundRect(0, mid_y-4, 8, 8, 4, WHITE);
+        if(state.gen_config_cursor == idx)
+            display.fillRoundRect(0+2, mid_y-4+2, 8-4, 8-4, 4, WHITE);
+
+        // LABEL
+        display.setCursor(8+2, mid_y+3);
+        display.print(labels[idx]);
+
+        // VALUE
+        char value_text[32] = {0};
+        switch (idx)
+        {
+            case 0:
+                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.shape);
+                break;
+            case 1:
+                snprintf(value_text, sizeof(value_text), "%dHz", (int16_t)state.gen_config.frequency);
+                break;
+            case 2:
+                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.lr_delta);
+                break;
+
+            case 3:
+                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.pulse_shape);
+                break;
+            case 4:
+                snprintf(value_text, sizeof(value_text), "%dHz", state.gen_config.pulse_freq);
+                break;
+            case 5:
+                snprintf(value_text, sizeof(value_text), "%d%", state.gen_config.pulse_bias);
+                break;
+
+            case 6:
+                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.am_shape);
+                break;
+            case 7:
+                snprintf(value_text, sizeof(value_text), "%.1fHz", state.gen_config.am_freqency);
+                break;
+            case 8:
+                snprintf(value_text, sizeof(value_text), "%.1f", state.gen_config.am_depth);
+                break;
+        }
+
+        draw_text(128, mid_y+3, value_text, true);
+    }
+}
 
 // ====================
 // HELPERS

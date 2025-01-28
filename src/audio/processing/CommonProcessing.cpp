@@ -69,8 +69,13 @@ void CommonProcessing::process(State &state, Frame *data, size_t frame_count, in
 
         // >>> WRITE RESULTS
         // ------------------------
+#ifdef LR_HARDWARE_INVERTED
+        data[i].channel1 = clamp(pcm_r, INT16_MIN, INT16_MAX);
+        data[i].channel2 = clamp(pcm_l, INT16_MIN, INT16_MAX);
+#else
         data[i].channel1 = clamp(pcm_l, INT16_MIN, INT16_MAX);
         data[i].channel2 = clamp(pcm_r, INT16_MIN, INT16_MAX);
+#endif
         time += 1;
     }
 }

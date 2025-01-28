@@ -33,13 +33,14 @@ void SoundGenerator::end()
     }
 }
 
-Frame *SoundGenerator::receive_chunk(size_t frame_count)
+Frame *SoundGenerator::receive_chunk(size_t frame_count, const SoundGeneratorConfig &config)
 {
     if (frame_count > buffer_frame_count) {
         ESP_LOGE(SOUND_GEN_TAG, "chunk is too big. cannot generate");
         return NULL;
     }
 
+    this->config = config;
     generate_chunk(buffer, frame_count);
     return buffer;
 }
@@ -59,8 +60,6 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
     static const float AUDIO_NORMALIZATION = 0.50118723f;    // -6db (fs)
     static const int16_t FS = (INT16_MAX - 1) * AUDIO_NORMALIZATION;
 
-    SoundGeneratorConfig config;
-
     for(uint32_t i = 0; i < frame_count; i++) {
         const float phase_delta_l = (float)config.frequency / sample_rate;
         float phase_delta_r;
@@ -76,7 +75,7 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
             // const float phase_align_step = min(abs(diff), 0.5f / sample_rate * 2);
             // phase_delta_r = phase_delta_l + (diff > 0 ? -phase_align_step : phase_align_step);
     
-            phase_delta_r = 0;
+            phase_delta_r = phase_delta_l;
             phase_r = phase_l + ((float)-config.lr_delta/360.f);
         }
 
@@ -102,7 +101,7 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
         if(config.am_shape > 0) {
             const float phase_delta_am = (float)config.am_freqency / sample_rate;
             phase_am = fmodf(phase_am + phase_delta_am, 1.f);
-            mult_am = (sin_fast(phase_am) + 1.f / 2.f) * config.am_depth + (1.f - config.am_depth);
+            mult_am = (sin_fast(phase_am) / 2.f + 0.5f) * config.am_depth + (1.f - config.am_depth);
         }
 
         const float mult = fclamp(mult_pulse * mult_am, 0.f, 1.f);

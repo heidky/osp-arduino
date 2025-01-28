@@ -26,6 +26,8 @@ protected:
     void draw_Settings_Invert();
     void draw_Settings_Ramp();
 
+    void draw_Generator();
+
     // HELPERS
     void draw_text(int16_t x, int16_t y, const char *s, bool top, bool right);
     void draw_text(int16_t x, int16_t y, const char *s, bool right);

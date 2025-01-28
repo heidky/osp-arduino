@@ -24,7 +24,12 @@ enum class Page {
     Settings_Source,
     Settings_Invert,
     Settings_Ramp,
+
+    Generator,
 };
+
+#define LR_FACTOR_MAX 99
+#define VIBE_LEVEL_MAX 20
 
 #define NUM_BTMODE 4
 #define BTMODE_BYPASS 0
@@ -67,6 +72,22 @@ enum class Page {
 #define SOURCE_BT 0
 #define SOURCE_GEN 1
 
+#define NUM_GEN_CONFIGS 9
+
+struct SoundGeneratorConfig {
+    float frequency = 400; // [200-1000]
+    int32_t shape = 1; 
+    int32_t lr_delta = 0; // < 0 is phase [0-180], >= 0 frequency delta*50 [0, 100] 
+    // float lr_phase_offset = 0;
+
+    int32_t pulse_shape = 0;
+    int32_t pulse_freq = 50; // [10-100]
+    int32_t pulse_bias = 50; // [10-100]
+
+    int32_t am_shape = 0; 
+    float am_freqency = 1;  // [0.1-10]
+    float am_depth = 0;     //[0-100]
+};
 
 struct State {
     Page page = Page::Main;
@@ -99,10 +120,11 @@ struct State {
     int vibe_level = 0;
     bool vibe_active = false;
     int32_t remote_score = 0;
-};
 
-#define LR_FACTOR_MAX 99
-#define VIBE_LEVEL_MAX 20
+    // GENERATOR
+    SoundGeneratorConfig gen_config;
+    int32_t gen_config_cursor = 3;
+};
 
 
 struct UiState {
@@ -171,4 +193,6 @@ protected:
     void page_Settings_Source(Action a, void* payload);
     void page_Settings_Invert(Action a, void* payload);
     void page_Settings_Ramp(Action a, void* payload);
+
+    void page_Generator(Action a, void* payload);
 };

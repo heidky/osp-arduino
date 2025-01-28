@@ -2,6 +2,8 @@
 // #define DEVICE_NAME "Osp2"
 #define DEVICE_NAME "LVS-Osp"
 
+// uncomment to invert L/R audio channels
+#define LR_HARDWARE_INVERTED
 
 // ========== GPIO ============
 #define GPIO_ROTARY_L_CLK 18

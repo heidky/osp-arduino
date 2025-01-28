@@ -54,6 +54,10 @@ void AppManager::action(Action a, void* payload) {
     case Page::Settings_Ramp:
         page_Settings_Ramp(a, payload);
         break;
+
+    case Page::Generator:
+        page_Generator(a, payload);
+        break;
     }
 
     xSemaphoreGive(state_mutex);
@@ -82,7 +86,12 @@ void AppManager::page_Main(Action a, void* payload) {
         break;
     }
     case Action::PressM: {
-        set_page(Page::BtMode_Selection);
+        if(state.source_mode == SOURCE_BT) {
+            set_page(Page::BtMode_Selection);
+        }
+        else if(state.source_mode == SOURCE_GEN) {
+            set_page(Page::Generator);
+        }
         break;
     }
     case Action::DoublePressM: {
@@ -328,10 +337,109 @@ void AppManager::page_Settings_Ramp(Action a, void* payload) {
     }
     case Action::PressM: {
         set_page(Page::Main);
+        break;
     }
     }
 }
 
+
+static void discrete_rotate(int32_t &value, int32_t d, int32_t num_options) {
+    value = (value + d + num_options) % num_options;
+}
+
+static void discrete_bounded(int32_t &value, int32_t d, int32_t num_options) {
+    int32_t new_value = value + d;
+    value = constrain(new_value, 0, num_options - 1);
+}
+
+static void notched_bounded(float &value, float d, float step, float min, float max) {
+    float new_value = value + d * step;
+    value = constrain(new_value, min, max);
+}
+
+static void notched_bounded(int32_t &value, int32_t d, int32_t step, int32_t min, int32_t max) {
+    int32_t new_value = value + d * step;
+    value = constrain(new_value, min, max);
+}
+
+static void notched_from_list(float &value, int32_t d, const float *list, size_t list_size) {
+    int32_t idx = 0;
+    
+    float min_dist = 1e9;
+    for(int i = 0; i < list_size; i++) {
+        float dist = abs(value - list[i]);
+        if(dist < min_dist) {
+            min_dist = dist;
+            idx = i;
+        }
+    }
+
+    idx = constrain(idx + d, 0, list_size - 1);
+    value = list[idx];
+}
+
+void AppManager::page_Generator(Action a, void *payload)
+{
+    static const float AM_FREQ_LIST[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.5, 10.0};
+    static const size_t AM_FREQ_LIST_SIZE = sizeof(AM_FREQ_LIST) / sizeof(AM_FREQ_LIST[0]);
+
+    switch (a) 
+    {
+    case Action::ValueL: {
+        int d = *(int*)payload;
+        discrete_rotate(state.gen_config_cursor, d, NUM_GEN_CONFIGS);
+        break;
+    }
+    case Action::ValueR: {
+        int d = *(int*)payload;
+        switch (state.gen_config_cursor)
+        {
+            case 0:
+                // todo
+                break;
+            case 1:
+                notched_bounded(state.gen_config.frequency, d, 50, FREQ_MIN, FREQ_MAX);
+                break;
+            case 2:
+                // todo
+                break;
+
+            case 3:
+                discrete_bounded(state.gen_config.pulse_shape, d, 2);
+                break;
+            case 4:
+                notched_bounded(state.gen_config.pulse_freq, d, 10, 10, 100);
+                break;
+            case 5:
+                notched_bounded(state.gen_config.pulse_bias, d, 10, 10, 100);
+                break;
+
+            case 6:
+                discrete_bounded(state.gen_config.am_shape, d, 2);
+                break;
+            case 7:
+                notched_from_list(state.gen_config.am_freqency, d, AM_FREQ_LIST, AM_FREQ_LIST_SIZE);
+                break;
+            case 8:
+                notched_bounded(state.gen_config.am_depth, d, 0.1, 0.0, 1);
+                break;
+        }
+        break;
+    }
+    case Action::PressL: {
+        set_l_factor(0);
+        break;
+    }
+    case Action::PressR: {
+        set_r_factor(0);
+        break;
+    }
+    case Action::PressM: {
+        set_page(Page::Main);
+        break;
+    }
+    }
+}
 
 // ==================
 // SETTERS
