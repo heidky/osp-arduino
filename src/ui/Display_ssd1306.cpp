@@ -80,7 +80,10 @@ void Display_ssd1306::draw_Main() {
     display.setFont(&FreeSans18pt7b);
     draw_2_digit_number(state.l_factor, 1,     btm, 19, false);
     draw_2_digit_number(state.r_factor, 127+1, btm, 19, true);
-    display.drawBitmap(128/2-8, btm-18, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
+
+    // BT mode icon
+    if(state.source_mode == SOURCE_BT)
+        display.drawBitmap(128/2-8, btm-18, epd_bitmap_bt_modes[state.bt_mode], 16, 16, WHITE);
 
     // status indicators
     if(state.bt_connected) {
@@ -145,14 +148,13 @@ void Display_ssd1306::draw_BtMode_Pulse() {
     draw_text(127-3, 12, "Bias", true);
 
     display.setFont(&FreeSans9pt7b);
-    String l = String(state.bt_mode_pulse_freq) + "Hz";
-    String r = String(state.bt_mode_pulse_bias) + "%";
+    char text[32] = {0};
+    
+    snprintf(text, sizeof(text), "%dHz", state.bt_mode_pulse_freq);
+    draw_text(3, 30, text, false, false);
 
-    draw_text(3, 30, l.c_str(), false, false);
-    draw_text(127-3, 30, r.c_str(), false, true);
-
-    // display.setFont(&FreeSans12pt7b);
-    // draw_text(127-3, 30, String("Pulse").c_str(), false, true);
+    snprintf(text, sizeof(text), "%d%%", state.bt_mode_pulse_bias);
+    draw_text(127-3, 30, text, false, true);
 }
 
 
@@ -160,13 +162,14 @@ void Display_ssd1306::draw_BtMode_AM() {
     display.setFont(&FreeSans6pt7b);
     draw_text(3, 12, "Shape", false);
     draw_text(127-3, 12, "Freq", true);
-
-    display.setFont(&FreeSans12pt7b);
-    // draw_text(3, 30, state.bt_mode_am_shape, false, false);
+    
     const unsigned char *shape_icon = epd_bitmap_shapes[state.bt_mode_am_shape];
     display.drawBitmap(3, 18+4, shape_icon, 16, 16, WHITE);
-    String f(state.bt_mode_am_freq);
-    draw_text(127-3, 32+4, (f + "Hz").c_str(), false, true);
+
+    display.setFont(&FreeSans12pt7b);
+    char text[32] = {0};
+    snprintf(text, sizeof(text), "%dHz", state.bt_mode_am_freq);
+    draw_text(127-3, 32+4, text, false, true);
 }
 
 
@@ -176,11 +179,14 @@ void Display_ssd1306::draw_BtMode_Tens() {
     draw_text(127-3, 12, "Freq", true);
 
     display.setFont(&FreeSans9pt7b);
+    char text[32] = {0};
     int wi = roundf(state.bt_mode_tens_width * (1e6f / 44100.f));
-    draw_text(3, 30, (String(wi) + "us").c_str(), false, false);
-    
-    String f(state.bt_mode_tens_freq);
-    draw_text(127-3, 30, (f + "Hz").c_str(), false, true);
+
+    snprintf(text, sizeof(text), "%dus", wi);
+    draw_text(3, 30, text, false, false);
+
+    snprintf(text, sizeof(text), "%dHz", state.bt_mode_tens_freq);    
+    draw_text(127-3, 30, text, false, true);
 }
 
 void Display_ssd1306::draw_Settings() {
@@ -262,7 +268,7 @@ void Display_ssd1306::draw_Generator()
         display.print(labels[idx]);
 
         // VALUE
-    char value_text[32] = {0};
+        char value_text[32] = {0};
         switch (idx)
         {
             case 0:
@@ -307,8 +313,9 @@ void Display_ssd1306::draw_Generator()
 // HELPERS
 // ====================
 void Display_ssd1306::draw_text(int16_t x, int16_t y, int s, bool top, bool right) {
-    String s0(s);
-    draw_text(x, y, s0.c_str(), top, right);
+    char text[32] = {0};
+    sniprintf(text, sizeof(text), "%d", s);
+    draw_text(x, y, text, top, right);
 }
 
 void Display_ssd1306::draw_text(int16_t x, int16_t y, const char* s, bool right) {
