@@ -463,11 +463,7 @@ void AppManager::set_page(Page p) {
 
 
 void AppManager::set_l_factor(int16_t factor) {
-    if (factor < 0) {
-        factor = 0;
-    } else if (factor > LR_FACTOR_MAX) {
-        factor = LR_FACTOR_MAX;
-    }
+    factor = constrain(factor, 0, LR_FACTOR_MAX);
 
     if(state.l_factor != factor) {
         state.l_factor = factor;
@@ -481,11 +477,7 @@ void AppManager::set_l_factor(int16_t factor) {
 }
 
 void AppManager::set_r_factor(int16_t factor) {
-    if (factor < 0) {
-        factor = 0;
-    } else if (factor > LR_FACTOR_MAX) {
-        factor = LR_FACTOR_MAX;
-    }
+    factor = constrain(factor, 0, LR_FACTOR_MAX);
 
     if(state.r_factor != factor) {
         state.r_factor = factor;
@@ -522,14 +514,8 @@ void AppManager::inc_bt_mode(int d) {
     updated = true;
 }
 
-void AppManager::set_pulse_freq(int freq)
-{
-    if(freq > PULSE_FREQ_MAX) {
-        freq = PULSE_FREQ_MAX;
-    }
-    else if (freq < PULSE_FREQ_MIN) {
-        freq = PULSE_FREQ_MIN;        
-    }
+void AppManager::set_pulse_freq(int freq) {
+    freq = constrain(freq, PULSE_FREQ_MIN, PULSE_FREQ_MAX);
 
     if(state.bt_mode_pulse_freq != freq) {
         state.bt_mode_pulse_freq = freq;
@@ -537,14 +523,8 @@ void AppManager::set_pulse_freq(int freq)
     }
 }
 
-void AppManager::set_pulse_bias(int b)
-{
-    if(b > PULSE_BIAS_MAX) {
-        b = PULSE_BIAS_MAX;
-    }
-    else if (b < PULSE_BIAS_MIN) {
-        b = PULSE_BIAS_MIN;        
-    }
+void AppManager::set_pulse_bias(int b) {
+    b = constrain(b, PULSE_BIAS_MIN, PULSE_BIAS_MAX);
 
     if(state.bt_mode_pulse_bias != b) {
         state.bt_mode_pulse_bias = b;
@@ -553,12 +533,7 @@ void AppManager::set_pulse_bias(int b)
 }
 
 void AppManager::set_bt_am_freq(int freq) {
-    if(freq > FREQ_MAX) {
-        freq = FREQ_MAX;
-    }
-    else if (freq < FREQ_MIN) {
-        freq = FREQ_MIN;        
-    }
+    freq = constrain(freq, FREQ_MIN, FREQ_MAX);
 
     if(state.bt_mode_am_freq != freq) {
         state.bt_mode_am_freq = freq;
@@ -576,12 +551,7 @@ void AppManager::inc_bt_am_shape(int d) {
 
 
 void AppManager::set_tens_freq(int freq) {
-    if(freq > TENS_FREQ_MAX) {
-        freq = TENS_FREQ_MAX;
-    }
-    else if (freq < TENS_FREQ_MIN) {
-        freq = TENS_FREQ_MIN;        
-    }
+    freq = constrain(freq, TENS_FREQ_MIN, TENS_FREQ_MAX);
 
     if(state.bt_mode_tens_freq != freq) {
         state.bt_mode_tens_freq = freq;
@@ -590,12 +560,7 @@ void AppManager::set_tens_freq(int freq) {
 }
 
 void AppManager::set_tens_width(int w) {
-    if(w > TENS_WIDTH_MAX) {
-        w = TENS_WIDTH_MAX;
-    }
-    else if (w < TENS_WIDTH_MIN) {
-        w = TENS_WIDTH_MIN;        
-    }
+    w = constrain(w, TENS_WIDTH_MIN, TENS_WIDTH_MAX);
 
     if(state.bt_mode_tens_width != w) {
         state.bt_mode_tens_width = w;
@@ -665,11 +630,7 @@ void AppManager::set_ble_connected_(bool connected) {
 
 void AppManager::set_vibe_level(int level, bool activate)
 {
-    if (level < 0) {
-        level = 0;
-    } else if (level > VIBE_LEVEL_MAX) {
-        level = VIBE_LEVEL_MAX;
-    }
+    level = constrain(level, 0, VIBE_LEVEL_MAX);
 
     if(activate) state.vibe_active = true;
 
