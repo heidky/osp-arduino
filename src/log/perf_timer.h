@@ -15,4 +15,4 @@ uint32_t __start_##n = esp_timer_get_time();
 __count_##n ++; \
 uint32_t __diff_##n = esp_timer_get_time() - __start_##n; \
 __accum_##n = __accum_##n > __diff_##n ? __accum_##n : __diff_##n; \
-if(__count_##n % every == 0) { ESP_LOGI(PERF_TAG, "[" #n "]> %dus", __accum_##n); __accum_##n = 0; }
+if(__count_##n % every == 0) { ESP_LOGW(PERF_TAG, "[" #n "]> %dus", __accum_##n); __accum_##n = 0; }

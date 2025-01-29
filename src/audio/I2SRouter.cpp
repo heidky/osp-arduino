@@ -233,8 +233,15 @@ void I2SRouter::i2s_task_handler()
         {
             static const size_t GEN_CHUNK_FRAMES = 128;
 
+            // START_PERF(generator); 
+            /*
+                > using 128 frames chunk
+                processing time: BASE 380us, PL: +240us, AM: +180us => worst case: 800us
+                available time: 128/44100 = 2.9ms
+            */
             const void *data = generator.receive_chunk(GEN_CHUNK_FRAMES, state.gen_config);
             const int32_t SR = generator.get_sample_rate();
+            // STOP_PERF(generator, 100);
 
             if(generator_sample_rate_changed) {
                 generator_sample_rate_changed = false;
