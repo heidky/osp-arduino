@@ -444,6 +444,10 @@ void AppManager::page_Generator(Action a, void *payload)
         set_page(Page::Main);
         break;
     }
+    case Action::DoublePressM: {
+        set_page(Page::Settings);
+        break;
+    }
     }
 }
 
