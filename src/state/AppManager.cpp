@@ -401,7 +401,13 @@ void AppManager::page_Generator(Action a, void *payload)
                 notched_bounded(state.gen_config.frequency, d, 50, FREQ_MIN, FREQ_MAX);
                 break;
             case 2:
-                // todo
+                if(state.gen_config.lr_delta > 0)
+                    notched_bounded(state.gen_config.lr_delta, d, 1, 0, 10);
+                else if(state.gen_config.lr_delta < 0)
+                    notched_bounded(state.gen_config.lr_delta, d, 20, -180, 0);
+                else // is zero
+                    if(d > 0) state.gen_config.lr_delta = 1;
+                    else if (d < 0) state.gen_config.lr_delta = -20;
                 break;
 
             case 3:

@@ -77,7 +77,7 @@ enum class Page {
 struct SoundGeneratorConfig {
     float frequency = 400; // [200-1000]
     int32_t shape = 1; 
-    int32_t lr_delta = 0; // < 0 is phase [0-180], >= 0 frequency delta*50 [0, 100] 
+    int32_t lr_delta = 0; // < 0 is phase [0-180]deg, >= 0 frequency delta [0, 10]Hz 
     // float lr_phase_offset = 0;
 
     int32_t pulse_shape = 0;

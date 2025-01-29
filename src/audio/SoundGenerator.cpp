@@ -65,7 +65,7 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
         float phase_delta_r;
 
         if(config.lr_delta > 0) {
-            phase_delta_r = phase_delta_l + ((float)config.lr_delta / 10.f / sample_rate);
+            phase_delta_r = phase_delta_l + ((float)config.lr_delta / sample_rate);
         }
         else {
             // const float current_phase_offset = phase_l - phase_r;
@@ -76,7 +76,7 @@ void SoundGenerator::generate_chunk(Frame *data, uint32_t frame_count)
             // phase_delta_r = phase_delta_l + (diff > 0 ? -phase_align_step : phase_align_step);
     
             phase_delta_r = phase_delta_l;
-            phase_r = phase_l + ((float)-config.lr_delta/360.f);
+            phase_r = phase_l + (-config.lr_delta)/360.f;
         }
 
         phase_l = fmodf(phase_l + phase_delta_l, 1.f);

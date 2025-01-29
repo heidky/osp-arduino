@@ -234,7 +234,7 @@ void Display_ssd1306::draw_Generator()
 
     // TITLE
     display.setFont(&FreeSans6pt7b);
-    display.setCursor(3, 12);
+    display.setCursor(0, 12);
     display.print("Generator [");
     display.print(page + 1);
     display.print("/");
@@ -242,7 +242,9 @@ void Display_ssd1306::draw_Generator()
     display.print("]");
 
     // ROWS
-    const char *labels[] = {"Shape", "Freq", "LR Delta", "PL Shape", "PL Freq", "PL Bias", "AM Shape", "AM Freq", "AM Depth"};
+    static const char *labels[] = {"Shape", "Freq", "LR Delta", "PL Shape", "PL Freq", "PL Bias", "AM Shape", "AM Freq", "AM Depth"};
+    static const char *OFF = "OFF";
+    static const char *ON = "ON";  
 
     display.setFont(&FreeSans6pt7b);
 
@@ -260,21 +262,24 @@ void Display_ssd1306::draw_Generator()
         display.print(labels[idx]);
 
         // VALUE
-        char value_text[32] = {0};
+    char value_text[32] = {0};
         switch (idx)
         {
             case 0:
-                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.shape);
+                snprintf(value_text, sizeof(value_text), "SIN");
                 break;
             case 1:
                 snprintf(value_text, sizeof(value_text), "%dHz", (int16_t)state.gen_config.frequency);
                 break;
             case 2:
-                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.lr_delta);
+                if(state.gen_config.lr_delta >= 0)
+                    snprintf(value_text, sizeof(value_text), "+%dHz", state.gen_config.lr_delta);
+                else
+                    snprintf(value_text, sizeof(value_text), "%ddeg", -state.gen_config.lr_delta);
                 break;
 
             case 3:
-                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.pulse_shape);
+                snprintf(value_text, sizeof(value_text), "%s", state.gen_config.pulse_shape ? ON : OFF);
                 break;
             case 4:
                 snprintf(value_text, sizeof(value_text), "%dHz", state.gen_config.pulse_freq);
@@ -284,7 +289,7 @@ void Display_ssd1306::draw_Generator()
                 break;
 
             case 6:
-                snprintf(value_text, sizeof(value_text), "%d", state.gen_config.am_shape);
+                snprintf(value_text, sizeof(value_text), "%s", state.gen_config.am_shape ? ON : OFF);
                 break;
             case 7:
                 snprintf(value_text, sizeof(value_text), "%.1fHz", state.gen_config.am_freqency);
