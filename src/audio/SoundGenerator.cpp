@@ -27,6 +27,7 @@ void SoundGenerator::end()
 {
     if(buffer != NULL) {
         free(buffer);
+        buffer = NULL;
     }
     else {
         ESP_LOGE(SOUND_GEN_TAG, "SoundGenerator cannot end(). buffer is NULL");
